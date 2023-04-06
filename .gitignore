@@ -1,0 +1,7 @@
+src/generated
+coverage
+node_modules
+.env
+container.bat
+build/
+dist/
