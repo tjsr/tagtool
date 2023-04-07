@@ -12,15 +12,15 @@ datasource db {
 }
 
 model User {
-  id BigInt @id
+  id String @id
   email String @unique
 }
 
 model Tags {
-  id BigInt @id
+  id BigInt @id @default(autoincrement())
   objectId String
   tag String
-  createdByUserId BigInt
+  createdByUserId String
 }
 
 model session {

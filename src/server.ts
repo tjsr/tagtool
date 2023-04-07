@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 
+import { addTag, getTags } from './api/tags';
 import { getSession, useSessionId } from './session';
 
 import { IPAddress } from './types';
@@ -66,14 +67,16 @@ export const startApp = (): express.Express => {
   );
   app.use(express.json());
 
-  app.get('/session', session);
-  app.post('/login', login);
-  app.get('/logout', logout);
-
   app.use((req, res, next) => {
     res.set('Set-Cookie', `sessionId=${req.session.id}`);
     next();
   });
+
+  app.get('/session', session);
+  app.post('/login', login);
+  app.get('/logout', logout);
+  app.get('/tags/:objectId', getTags);
+  app.post('/tags/:objectId', addTag);
 
   app.use(express.static('build'));
 

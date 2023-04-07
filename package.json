@@ -7,7 +7,7 @@
   "license": "ISC",
   "homepage": "./",
   "scripts": {
-    "clean": "rimraf dist build node_modules",
+    "clean": "rimraf dist build node_modules src/generated",
     "test": "ts-test",
     "generate": "prisma generate",
     "start:frontend": "cross-env GENERATE_SOURCEMAP=true PORT=3008 react-scripts start",
@@ -18,9 +18,10 @@
     "lint": "eslint --fix \"./src/**/*.{ts,tsx}\"",
     "prettier": "prettier --single-quote --write \"./src/**/*.{ts,tsx}\"",
     "format": "npm run prettier && npm run lint",
-    "db:init:dev": "npx prisma migrate dev --name init",
-    "db:upgrade": "npx prisma migrate dev",
-    "db:upgrade:deploy": "npx prisma migrate deploy"
+    "db:init:dev": "prisma migrate dev --name init",
+    "db:generate": "rimraf src/generated && prisma generate",
+    "db:upgrade": "prisma migrate dev",
+    "db:upgrade:deploy": "prisma migrate deploy"
   },
   "repository": {
     "type": "git",
