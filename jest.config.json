@@ -1,0 +1,7 @@
+{
+  "bail": 1,
+  "verbose": true,
+  "detectOpenHandles": true,
+  "preset": "ts-jest",
+  "testEnvironment": "node"
+}

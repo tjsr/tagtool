@@ -6,3 +6,10 @@ export type IPAddress = string;
 export type UserId = uuid5;
 export type SnowflakeType = bigint | string;
 export type ISO8601Date = Date;
+export type ObjectId = string;
+
+export interface Tag {
+  createdByUserId: UserId,
+  objectId: ObjectId,
+  tag: string
+}

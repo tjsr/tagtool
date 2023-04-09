@@ -1,17 +1,19 @@
 import * as dotenv from 'dotenv';
 
-import { addTag, getTags } from './api/tags';
-import { getSession, useSessionId } from './session';
+import { addTag, deleteTags, getTags } from './api/tags';
+import { getSession, simpleSessionId, useSessionId } from './session';
 
 import { IPAddress } from './types';
+import { session as apiSession } from './api/session';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import { getUser } from './api/user';
 import { login } from './api/login';
 import { logout } from './api/logout';
 import morgan from 'morgan';
 import requestIp from 'request-ip';
-import { session } from './api/session';
+import session from 'express-session';
 
 dotenv.config();
 
@@ -42,7 +44,7 @@ export const getIp = (req: express.Request): IPAddress => {
   return (req as any).clientIp;
 };
 
-export const startApp = (): express.Express => {
+export const startApp = (sessionStore?: session.MemoryStore): express.Express => {
   const app: express.Express = express();
   app.use(morganLog);
   app.use(cors(corsOptions));
@@ -55,8 +57,8 @@ export const startApp = (): express.Express => {
   });
 
   app.use(cookieParser());
-  app.use(getSession());
-  app.use(useSessionId);
+  app.use(getSession(sessionStore));
+  app.use(simpleSessionId);
 
   // initialisePassportToExpressApp(app);
 
@@ -72,11 +74,13 @@ export const startApp = (): express.Express => {
     next();
   });
 
-  app.get('/session', session);
+  app.get('/session', apiSession);
   app.post('/login', login);
   app.get('/logout', logout);
   app.get('/tags/:objectId', getTags);
   app.post('/tags/:objectId', addTag);
+  app.delete('/tags/:objectId', deleteTags);
+  app.get('/user', getUser);
 
   app.use(express.static('build'));
 

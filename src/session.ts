@@ -8,9 +8,11 @@ import session, { Session, SessionData } from 'express-session';
 import { IncomingHttpHeaders } from 'http';
 import { createRandomUserId } from './auth/user';
 import express from 'express';
-import { getConnectionPool } from './database/mysql';
+import { getConnectionPool } from './database/mysqlConnections';
 import mySQLStore from 'express-mysql-session';
 import { v4 as uuidv4 } from 'uuid';
+
+// const SESSION_ID_NAMESPACE = '0fac0952-9b54-43a9-be74-8d60533aa667';
 
 export interface TagtoolSessionData extends SessionData {
   userId: UserId;
@@ -45,7 +47,7 @@ const sessionStore = new MysqlSessionStore(
 
 const memoryStore = new session.MemoryStore();
 
-export const getSession = () => {
+export const getSession = (useSessionStore: expressSession.Store = sessionStore) => {
   return session({
     cookie: {
       maxAge: IN_PROD ? TWO_HOURS : TWENTYFOUR_HOURS,
@@ -76,8 +78,29 @@ export const getSession = () => {
     resave: false,
     rolling: false,
     saveUninitialized: false,
-    secret: process.env.SESSION_SECRET || '',
-    store: sessionStore !== undefined ? sessionStore : memoryStore,
+    secret: process.env.SESSION_SECRET || uuidv4(),
+    store: useSessionStore !== undefined ? useSessionStore : memoryStore,
+  });
+};
+
+export const simpleSessionId = (
+  req: TagtoolRequest,
+  res: express.Response,
+  next: () => void
+) => {
+  req.sessionStore.get(req.sessionID, (err, sessionData) => {
+    if (!sessionData || req.session.userId == undefined) {
+      const userId: uuid5 = createRandomUserId();
+      req.session.userId = userId;
+    }
+
+    if (err) {
+      res.status(500);
+      res.end();
+    } else {
+      req.session.save();
+      next();
+    }
   });
 };
 
@@ -91,12 +114,18 @@ export const useSessionId = (
     if (!req.sessionID) {
       req.sessionID = sessionId;
     }
+    // req.sessionID = 'xyxy1234';
+    if (!req.sessionStore) {
+      const errMsg = 'sessionStore has not been configured and is undefined';
+      console.error(errMsg);
+      throw Error(errMsg);
+    }
     // retrieve session from session store using sessionId
     req.sessionStore.get(sessionId, (err, sessionData) => {
-      if (!err) {
-        req.session.save();
+      if (err) {
+        console.log('Given sessionId was not found, generate a new one...');
       }
-      if (sessionData) {
+      if (sessionData && req.sessionID.length > 16) {
         req.session = Object.assign(req.session, sessionData);
         if (req.session.userId == undefined) {
           const userId: uuid5 = createRandomUserId();
@@ -105,8 +134,12 @@ export const useSessionId = (
           );
           req.session.userId = userId;
         }
+        req.session.save();
+        next();
+      } else {
+        res.status(401);
+        res.end();
       }
-      next();
     });
   } else {
     if (req.session.userId == undefined) {
