@@ -27,7 +27,7 @@ COPY .npmrc /opt/tagtool
 
 RUN npm i --production
 COPY --from=tagtool-build /opt/tagtool/dist /opt/tagtool/dist
-COPY --from=tagtool-build /opt/abtagtoolsee/build /opt/tagtool/dist/build
+COPY --from=tagtool-build /opt/tagtool/build /opt/tagtool/dist/build
 WORKDIR /opt/tagtool/dist
 
 EXPOSE 8242
