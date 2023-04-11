@@ -9,7 +9,7 @@
   "scripts": {
     "clean": "rimraf dist build",
     "clean:all": "npm run clean && rimraf node_modules package-lock.json",
-    "test": "ts-jest",
+    "test": "jest",
     "start:frontend": "cross-env GENERATE_SOURCEMAP=true PORT=3008 react-scripts start",
     "start:dev": "nodemon index.ts && cross-env PORT=3008 react-scripts start",
     "start:prod": "node index.js",

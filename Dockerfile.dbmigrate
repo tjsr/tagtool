@@ -1,0 +1,15 @@
+ARG NPM_VERSION=9.6.3
+ARG NODE_VERSION=18.13.0
+FROM node:${NODE_VERSION}-alpine3.17 as tagtool-dbmigrate
+
+RUN npm install -g npm@${NPM_VERSION}
+
+RUN mkdir /opt/tagtool
+COPY package.json /opt/tagtool
+COPY package-lock.json /opt/tagtool
+COPY prisma /opt/tagtool
+
+WORKDIR /opt/tagtool
+RUN npm i
+
+CMD ["npm", "run", "db:upgrade:deploy"]

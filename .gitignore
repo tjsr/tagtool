@@ -5,3 +5,4 @@ node_modules
 container.bat
 build/
 dist/
+dbcreate.sql
