@@ -16,6 +16,7 @@ on:
 jobs:
   deployment:
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
     environment:
       name: ${{  github.events.inputs.environment }}
       url: https://tagtool.dev.pinpare.com
