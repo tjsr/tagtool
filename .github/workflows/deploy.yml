@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'
     environment:
-      name: dev
-      # name: ${{  github.events.inputs.environment }}
+      # name: dev
+      name: ${{  inputs.environment }}
       url: https://tagtool.dev.pinpare.com
     env:
       IMAGE_TAG: ${{ github.sha }}
