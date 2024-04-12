@@ -1,6 +1,6 @@
 ARG NODE_VERSION=18.13.0
-ARG NPM_VERSION=9.6.3
 FROM node:${NODE_VERSION}-alpine3.17 as tagtool-build-preflight
+ARG NPM_VERSION=9.6.3
 RUN npm install -g npm@${NPM_VERSION}
 
 RUN mkdir /opt/tagtool
