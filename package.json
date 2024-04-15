@@ -64,7 +64,7 @@
     "@types/react": "^18.0.33",
     "@types/react-dom": "^18.0.11",
     "@types/request-ip": "^0.0.41",
-    "@types/supertest": "^2.0.12",
+    "@types/supertest": "^6.0.2",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "cross-env": "^7.0.3",
@@ -75,7 +75,7 @@
     "prisma": "^4.12.0",
     "react-scripts": "^5.0.1",
     "rimraf": "^4.4.1",
-    "supertest": "^6.3.3",
+    "supertest": "^6.3.4",
     "ts-jest": "^29.1.0",
     "typescript": "^4.9.5"
   },
