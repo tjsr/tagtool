@@ -3,5 +3,6 @@
   "verbose": true,
   "detectOpenHandles": true,
   "preset": "ts-jest",
-  "testEnvironment": "node"
+  "testEnvironment": "node",
+  "testRunner": "jest-jasmine2"
 }
