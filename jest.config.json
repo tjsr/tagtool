@@ -2,7 +2,9 @@
   "bail": 1,
   "verbose": true,
   "detectOpenHandles": true,
+  "modulePathIgnorePatterns": ["dist"],
   "preset": "ts-jest",
+  "setupFiles": ["<rootDir>/src/setup-tests.ts"],
   "testEnvironment": "node",
   "testRunner": "jest-jasmine2"
 }

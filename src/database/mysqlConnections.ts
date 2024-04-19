@@ -8,13 +8,18 @@ export type PoolConnection = mysql.PoolConnection;
 dotenv.config();
 
 const config: mysql.PoolConfig = {
+  bigNumberStrings: true,
+  connectTimeout: process.env['MYSQL_CONNECT_TIMEOUT'] ? parseInt(process.env['MYSQL_CONNECT_TIMEOUT']) : 2000,
   connectionLimit:
     process.env.MYSQL_CONNECTION_POOL_SIZE !== undefined ?
       parseInt(process.env.MYSQL_CONNECTION_POOL_SIZE) :
       5,
   database: requireEnv('MYSQL_DATABASE'),
+  debug: process.env['MYSQL_DEBUG'] === 'true' ? true : false,
   host: requireEnv('MYSQL_HOST'),
   password: requireEnv('MYSQL_PASSWORD'),
+  port: requireEnv('MYSQL_PORT') !== undefined ? parseInt(requireEnv('MYSQL_PORT')) : 3306,
+  supportBigNumbers: true,
   user: requireEnv('MYSQL_USER'),
 };
 
@@ -37,5 +42,8 @@ export const getConnection = async (): Promise<PoolConnection> => {
 };
 
 export const closeConnections = async (): Promise<void> => {
-  await connectionPool.end();
+  if (connectionPool !== undefined) {
+    connectionPool.end();
+  }
+  return Promise.resolve();
 };

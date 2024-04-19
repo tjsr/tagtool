@@ -1,7 +1,7 @@
 import { EmailAddress, UserId, uuid5 } from '../types';
 
 import { TagtoolRequest } from '../session';
-import { getSnowflake } from '../snowflake';
+import { createRandomId } from '../utils/createRandomId';
 import { v5 as uuidv5 } from 'uuid';
 
 const USERID_UUID_NAMESPACE =
@@ -12,7 +12,7 @@ export const createUserIdFromEmail = (email: EmailAddress): uuid5 => {
 };
 
 export const createRandomUserId = (): uuid5 => {
-  return uuidv5(getSnowflake().toString(), USERID_UUID_NAMESPACE);
+  return createRandomId(USERID_UUID_NAMESPACE);
 };
 
 export const getUserId = (request: TagtoolRequest): UserId => {

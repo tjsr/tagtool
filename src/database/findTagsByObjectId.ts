@@ -1,11 +1,10 @@
 import { ObjectId, Tag } from '../types';
-
-import { getConnection } from './mysqlConnections';
+import { PoolConnection, getConnection } from './mysqlConnections';
 
 export const findTagsByObjectId = async (
   objectId: ObjectId
 ): Promise<Tag[]> => {
-  const conn = await getConnection();
+  const conn: PoolConnection = await getConnection();
 
   return new Promise((resolve, reject) => {
     try {

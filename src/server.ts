@@ -1,7 +1,7 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from 'dotenv-flow';
 
-import { addTag, deleteTags, getTags } from './api/tags';
-import { getSession, simpleSessionId, useSessionId } from './session';
+import { addTag, deleteTags, getTags, validateHasUserId, validateTags } from './api/tags';
+import { getSession, simpleSessionId } from './session';
 
 import { IPAddress } from './types';
 import { session as apiSession } from './api/session';
@@ -77,10 +77,11 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   app.get('/session', apiSession);
   app.post('/login', login);
   app.get('/logout', logout);
-  app.get('/tags/:objectId', getTags);
-  app.post('/tags/:objectId', addTag);
-  app.delete('/tags/:objectId', deleteTags);
+  app.get('/tags/:objectId', validateHasUserId, validateTags, getTags);
+  app.post('/tags/:objectId', validateHasUserId, validateTags, addTag);
+  app.delete('/tags/:objectId', validateHasUserId, validateTags, deleteTags);
   app.get('/user', getUser);
+  app.get('/user/:userId', getUser);
 
   app.use(express.static('build'));
 

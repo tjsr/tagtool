@@ -9,7 +9,8 @@
   "scripts": {
     "clean": "rimraf dist build",
     "clean:all": "npm run clean && rimraf node_modules package-lock.json",
-    "test": "jest",
+    "test": "jest --runInBand --detectOpenHandles --forceExit",
+    "test:coverage": "jest --runInBand --detectOpenHandles --forceExit --coverage",
     "start:frontend": "cross-env GENERATE_SOURCEMAP=true PORT=3008 react-scripts start",
     "start:dev": "nodemon index.ts && cross-env PORT=3008 react-scripts start",
     "start:prod": "node index.js",
@@ -38,6 +39,7 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
+    "dotenv-flow": "^4.1.0",
     "email-validator": "^2.0.4",
     "express": "^4.19.2",
     "express-mysql-session": "^3.0.0",

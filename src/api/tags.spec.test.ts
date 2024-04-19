@@ -2,16 +2,27 @@ import { ObjectId, UserId } from '../types';
 
 import { TagResponse } from './apiTypes';
 import { closeConnections } from '../database/mysqlConnections';
+import { createRandomId } from '../utils/createRandomId';
+import { createRandomUserId } from '../auth/user';
 import express from 'express';
 import { insertTag } from '../database/insertTag';
+import { randomUUID } from 'crypto';
 import session from 'express-session';
 import { startApp } from '../server';
 import supertest from 'supertest';
 
 describe('GET /tags', () => {
   let app:express.Express;
+  const generatedUid: UserId = createRandomUserId();
+  const generatedObjectId: ObjectId = createRandomId(randomUUID());
+  const generatedTag = 'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
 
   beforeAll(async () => {
+    await insertTag(generatedUid, generatedObjectId, generatedTag);
+    return Promise.resolve();
+  });
+
+  beforeEach(async () => {
     const memoryStore = new session.MemoryStore();
     const testSessionId = 's1234';
     memoryStore.set(testSessionId, {
@@ -21,32 +32,40 @@ describe('GET /tags', () => {
     return Promise.resolve();
   });
 
-  // afterAll(() => {
-  //   closeConnections();
-  // });
+  afterAll(() => {
+    return closeConnections();
+  });
 
   test('Should return a 200 error if there\'s no session userInfo.', (done) => {
     supertest(app)
-      .get('/tags/123')
-      .expect(200, (err, res) => {
-        if (err) {
-          return done(err);
-        }
+      .get(`/tags/${generatedObjectId}`)
+      .expect(200, (err, response) => {
+        expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
         done();
       });
   });
 
-  test('Should reject a made-up SessionID that we dont know about', (done) => {
-    supertest(app)
-      .get('/tags/123')
+  test('Should return a 200 error if there\'s no session userInfo.', async () => {
+    const response = await supertest(app)
+      .get(`/tags/${generatedObjectId}`);
+
+    expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
+    expect(response.statusCode).toBe(200);
+    return Promise.resolve();
+  });
+
+  test('Should reject a made-up SessionID that we dont know about', async () => {
+    const response = await supertest(app)
+      .get(`/tags/${generatedObjectId}`)
       .set('x-session-id', 'abcd-1234')
-      .set('Content-Type', 'application/json')
-      .expect(401, () => {
-        done();
-      });
+      .set('Content-Type', 'application/json');
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.data).toBeUndefined();
+    return Promise.resolve();
   });
 
-  test('Should return a 200 error if the user is unregistered.', async () => {
+  test('Should return a 200 if there is no authenticated user for the session.', async () => {
     const memoryStore = new session.MemoryStore();
     const testSessionId = 's1234';
     const testObjectId: ObjectId = 'o1234';
@@ -55,28 +74,18 @@ describe('GET /tags', () => {
       cookie: new session.Cookie(),
     });
     const app:express.Express = startApp(memoryStore);
-    // console.log('Session store configured');
 
-    await insertTag(ownerUser, testObjectId, 'some-tag'); // .then(() => {
-    await insertTag(ownerUser, testObjectId, 'some-other-tag'); // .then(() => {
-
-    // });
-    supertest(app)
+    await insertTag(ownerUser, testObjectId, 'some-tag');
+    await insertTag(ownerUser, testObjectId, 'some-other-tag');
+    const response = await supertest(app)
       .get(`/tags/${testObjectId}`)
-      .set('Content-Type', 'application/json')
-      .expect('Content-Type', /json/)
-      .expect(200, (err, res) => {
-        expect(err).toBeNull();
-        // if (err) {
-        //   return done(err);
-        // } else {
-        const response: TagResponse = res.body;
-        expect(response.objectId).toBe(testObjectId);
-        expect(response.tags.length).toBe(2);
-        //   done();
-        // }
-      });
-    // });
-    // });
+      .set('Content-Type', 'application/json');
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type'].match(/json/)).toBeTruthy();
+    const responseBody: TagResponse = response.body;
+    expect(responseBody.objectId).toBe(testObjectId);
+    expect(responseBody.tags.length).toBe(2);
+    return Promise.resolve();
   });
 });

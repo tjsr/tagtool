@@ -17,10 +17,12 @@ import { v4 as uuidv4 } from 'uuid';
 export interface TagtoolSessionData extends SessionData {
   userId: UserId;
   email: EmailAddress;
+  newId: boolean;
 }
 
 export interface TagtoolRequest extends Express.Request {
   session: Session & Partial<TagtoolSessionData>;
+  newSessionIdGenerated?: boolean;
 }
 
 dotenv.config();
@@ -55,7 +57,7 @@ export const getSession = (useSessionStore: expressSession.Store = sessionStore)
       sameSite: true,
       secure: IN_PROD,
     },
-    genid: function (req: express.Request) {
+    genid: function (req: TagtoolRequest) {
       const headers: IncomingHttpHeaders = req.headers;
       const sessionIdHeader: string | string[] | undefined =
         headers['x-session-id'];
@@ -63,16 +65,20 @@ export const getSession = (useSessionStore: expressSession.Store = sessionStore)
         typeof sessionIdHeader === 'string' &&
         sessionIdHeader !== 'undefined'
       ) {
+        req.newSessionIdGenerated = false;
         return sessionIdHeader;
       }
       if (req.sessionID) {
+        req.newSessionIdGenerated = false;
         return req.sessionID;
       }
       const cookieValue = req.cookies['sessionId'];
       if (cookieValue !== undefined && cookieValue !== 'undefined') {
+        req.newSessionIdGenerated = false;
         return cookieValue;
       }
       const newId: uuid4 = uuidv4(); // use UUIDs for session IDs
+      req.newSessionIdGenerated = true;
       return newId;
     },
     resave: false,
@@ -88,19 +94,37 @@ export const simpleSessionId = (
   res: express.Response,
   next: () => void
 ) => {
-  req.sessionStore.get(req.sessionID, (err, sessionData) => {
-    if (!sessionData || req.session.userId == undefined) {
-      const userId: uuid5 = createRandomUserId();
-      req.session.userId = userId;
+  req.sessionStore.get(req.sessionID, (err: any, genericSessionData: SessionData | null | undefined) => {
+    if (err) {
+      console.warn('Error getting session data', err);
+      res.status(500);
+      res.send(err);
+      res.end();
+      return;
     }
 
-    if (err) {
-      res.status(500);
+    const sessionData: TagtoolSessionData | undefined = genericSessionData as TagtoolSessionData;
+
+    if (req.sessionID && sessionData === undefined && !req.newSessionIdGenerated) {
+      req.session.newId = undefined;
+      res.status(401);
       res.end();
-    } else {
-      req.session.save();
-      next();
+      return;
     }
+    req.session.newId = undefined;
+    if (sessionData?.userId && req.session.userId == undefined) {
+      req.session.userId = sessionData.userId;
+    }
+    if (sessionData?.email && req.session.email == undefined) {
+      req.session.email = sessionData.email;
+    }
+    if (sessionData?.newId && req.session.newId == undefined) {
+      // Should only ever be new the first time we write a userId received from another auth source.
+      req.session.newId = false;
+    }
+
+    req.session.save();
+    next();
   });
 };
 

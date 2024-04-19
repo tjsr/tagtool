@@ -24,7 +24,7 @@ export const logout = async (request: TagtoolRequest, res: express.Response) => 
     res.send(result);
   } catch (e) {
     res.status(500);
-    console.log(e);
+    console.warn(e);
     res.send(result);
   } finally {
     res.end();
