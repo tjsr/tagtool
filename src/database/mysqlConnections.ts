@@ -18,7 +18,7 @@ const config: mysql.PoolConfig = {
   debug: process.env['MYSQL_DEBUG'] === 'true' ? true : false,
   host: requireEnv('MYSQL_HOST'),
   password: requireEnv('MYSQL_PASSWORD'),
-  port: requireEnv('MYSQL_PORT') !== undefined ? parseInt(requireEnv('MYSQL_PORT')) : 3306,
+  port: process.env['MYSQL_PORT'] ? parseInt(process.env['MYSQL_PORT']) : 3306,
   supportBigNumbers: true,
   user: requireEnv('MYSQL_USER'),
 };
