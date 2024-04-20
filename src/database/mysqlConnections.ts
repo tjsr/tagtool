@@ -1,24 +1,25 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from 'dotenv-flow';
+
+import { booleanEnv, intEnv, requireEnv } from '@tjsr/simple-env-utils';
 
 import mysql from 'mysql';
-import { requireEnv } from '../utils/requireEnv';
 
 export type PoolConnection = mysql.PoolConnection;
 
-dotenv.config();
+dotenv.config({ silent: true });
 
 const config: mysql.PoolConfig = {
   bigNumberStrings: true,
-  connectTimeout: process.env['MYSQL_CONNECT_TIMEOUT'] ? parseInt(process.env['MYSQL_CONNECT_TIMEOUT']) : 2000,
+  connectTimeout: intEnv('MYSQL_CONNECT_TIMEOUT', 2000),
   connectionLimit:
     process.env.MYSQL_CONNECTION_POOL_SIZE !== undefined ?
       parseInt(process.env.MYSQL_CONNECTION_POOL_SIZE) :
       5,
   database: requireEnv('MYSQL_DATABASE'),
-  debug: process.env['MYSQL_DEBUG'] === 'true' ? true : false,
+  debug: booleanEnv('MYSQL_DEBUG', false),
   host: requireEnv('MYSQL_HOST'),
   password: requireEnv('MYSQL_PASSWORD'),
-  port: process.env['MYSQL_PORT'] ? parseInt(process.env['MYSQL_PORT']) : 3306,
+  port: intEnv('MYSQL_PORT', 3306),
   supportBigNumbers: true,
   user: requireEnv('MYSQL_USER'),
 };

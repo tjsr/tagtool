@@ -1,4 +1,4 @@
-import { isTestMode } from '../utils';
+import { isTestMode } from '@tjsr/simple-env-utils';
 import { validate } from 'uuid';
 
 export const validateTag = (id: string): boolean => {

@@ -46,7 +46,9 @@ export const getIp = (req: express.Request): IPAddress => {
 
 export const startApp = (sessionStore?: session.MemoryStore): express.Express => {
   const app: express.Express = express();
-  app.use(morganLog);
+  if (process.env['USE_LOGGING'] !== 'false') {
+    app.use(morganLog);
+  }
   app.use(cors(corsOptions));
   app.use(requestIp.mw());
   app.set('trust proxy', true);

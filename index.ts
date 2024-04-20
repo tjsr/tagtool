@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 
 import express from 'express';
-import { requireEnv } from './src/utils/requireEnv';
+import { requireEnv } from '@tjsr/simple-env-utils';
 import { startApp } from './src/server';
 
 dotenv.config();

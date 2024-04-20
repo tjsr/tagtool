@@ -1,5 +1,5 @@
 import { ObjectId } from '../types';
-import { isTestMode } from '../utils';
+import { isTestMode } from '@tjsr/simple-env-utils';
 import { validate } from 'uuid';
 
 export const validateObjectId = (id: ObjectId): boolean => {
