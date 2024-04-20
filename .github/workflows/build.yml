@@ -45,7 +45,8 @@ jobs:
         context: .
         builder: ${{ steps.buildx.outputs.name }}
         secrets: |
-          id=github,env=TAGTOOL_GITHUB_PAT
+          id=github2,env=TAGTOOL_GITHUB_PAT
+          github=${{ secrets.GITHUB_TOKEN }}
         file: Dockerfile.dbmigrate
         push: ${{ github.actor != 'dependabot[bot]' }}
         tags: ${{ github.actor != 'dependabot[bot]' && format('{0}/', steps.login-ecr-public.outputs.registry) || ''}}${{ env.DBMIGRATE_IMAGE }}
@@ -59,6 +60,7 @@ jobs:
         builder: ${{ steps.buildx.outputs.name }}
         secrets: |
           id=github,env=TAGTOOL_GITHUB_PAT
+          github=${{ secrets.GITHUB_TOKEN }}
         file: Dockerfile
         push: ${{ github.actor != 'dependabot[bot]' }}
         tags: ${{ github.actor != 'dependabot[bot]' && format('{0}/', steps.login-ecr-public.outputs.registry) || ''}}${{ env.API_IMAGE }}
