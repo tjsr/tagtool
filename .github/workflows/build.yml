@@ -9,8 +9,6 @@ jobs:
       BUILDKIT_PROGRESS: plain
       DBMIGRATE_IMAGE: tjsrowe/tagtool:dbmigrate-${{ github.sha }}
       API_IMAGE: tjsrowe/tagtool:${{ github.sha }}
-      TAGTOOL_GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      TAGTOOL_GITHUB_PAT_2: ${{ secrets.TAGTOOL_GITHUB_PAT }}
 
     steps:
     - name: Check out repositofy code
@@ -45,7 +43,6 @@ jobs:
         context: .
         builder: ${{ steps.buildx.outputs.name }}
         secrets: |
-          id=github2,env=TAGTOOL_GITHUB_PAT
           github=${{ secrets.GITHUB_TOKEN }}
         file: Dockerfile.dbmigrate
         push: ${{ github.actor != 'dependabot[bot]' }}
@@ -59,7 +56,6 @@ jobs:
         context: .
         builder: ${{ steps.buildx.outputs.name }}
         secrets: |
-          id=github,env=TAGTOOL_GITHUB_PAT
           github=${{ secrets.GITHUB_TOKEN }}
         file: Dockerfile
         push: ${{ github.actor != 'dependabot[bot]' }}
