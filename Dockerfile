@@ -1,7 +1,7 @@
-ARG NODE_VERSION=18.13.0
-FROM node:${NODE_VERSION}-alpine3.17 as tagtool-build-preflight
-ARG NPM_VERSION=9.6.3
-RUN npm install -g npm@${NPM_VERSION}
+ARG NODE_VERSION=20.12.2
+ARG ALPINE_VERSION=3.19
+ARG NPM_VERSION=10.5.2
+FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} as tagtool-build-preflight
 
 RUN mkdir /opt/tagtool
 
@@ -18,14 +18,22 @@ COPY babel.config.js /opt/tagtool
 COPY tsconfig.json /opt/tagtool
 COPY .npmrc /opt/tagtool
 
-RUN npm i && npm run build
+RUN --mount=type=secret,id=github,target=/root/.npm/github_pat \
+  echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github_pat)" >> /root/.npmrc && \
+  npm install && \
+  npm run build && \
+  rm -f /root/.npmrc
 
 FROM tagtool-build-preflight as tagtool
 
 COPY package*.json /opt/tagtool
 COPY .npmrc /opt/tagtool
 
-RUN npm i --production
+RUN --mount=type=secret,id=github,target=/root/.npm/github_pat \
+  echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github_pat)" >> /root/.npmrc && \
+  npm install --omit=dev && \
+  rm -f /root/.npmrc
+
 COPY --from=tagtool-build /opt/tagtool/dist /opt/tagtool/dist
 COPY --from=tagtool-build /opt/tagtool/build /opt/tagtool/dist/build
 WORKDIR /opt/tagtool/dist
