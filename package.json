@@ -15,15 +15,17 @@
     "start:dev": "nodemon index.ts && cross-env PORT=3008 react-scripts start",
     "start:prod": "node index.js",
     "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts build && tsc",
-    "docker:build": "docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool -f Dockerfile .",
-    "docker:build:dbmigrate": "docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool-dbmigrate -f Dockerfile.dbmigrate .",
+    "docker:build": "npx tsx bin/docker-build-with-secret.ts tagtool Dockerfile",
+    "docker:build:dbmigrate": "npx tsx bin/docker-build-with-secret.ts tagtool-dbmigrate Dockerfile.dbmigrate",
     "docker:test": "npm run docker:build && docker run --rm --name tagtool-test -it tagtool npm i && npm test",
     "lint": "eslint --fix \"./src/**/*.{ts,tsx}\"",
     "prettier": "prettier --single-quote --write \"./src/**/*.{ts,tsx}\"",
     "format": "npm run prettier && npm run lint",
     "db:init:dev": "prisma migrate dev --name init",
     "db:upgrade": "prisma migrate dev",
-    "db:upgrade:deploy": "prisma migrate deploy"
+    "db:upgrade:deploy": "prisma migrate deploy",
+    "docker:build:old": "docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool -f Dockerfile .",
+    "docker:build:dbmigrate:old": "docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool-dbmigrate -f Dockerfile.dbmigrate ."
   },
   "repository": {
     "type": "git",
@@ -36,7 +38,8 @@
     "url": "https://github.com/tjsr/tagtool/issues"
   },
   "dependencies": {
-    "@tjsr/simple-env-utils": "^0.0.4",
+    "@tjsr/mysql-pool-utils": "^0.0.3",
+    "@tjsr/simple-env-utils": "^0.0.8",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

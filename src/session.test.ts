@@ -1,6 +1,6 @@
 import { TagtoolSessionData, getSession, useSessionId } from './session';
 
-import { closeConnections } from './database/mysqlConnections';
+import { closeConnectionPool } from '@tjsr/mysql-pool-utils';
 import express from 'express';
 import session from 'express-session';
 import { startApp } from './server';
@@ -31,7 +31,7 @@ describe('useSessionId', () => {
   });
 
   afterAll(() => {
-    return closeConnections();
+    return closeConnectionPool();
   });
 
   test('Should reject a made-up SessionID that we dont know about', (done) => {

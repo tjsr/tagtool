@@ -8,7 +8,7 @@ import session, { Session, SessionData } from 'express-session';
 import { IncomingHttpHeaders } from 'http';
 import { createRandomUserId } from './auth/user';
 import express from 'express';
-import { getConnectionPool } from './database/mysqlConnections';
+import { getConnectionPool } from '@tjsr/mysql-pool-utils';
 import mySQLStore from 'express-mysql-session';
 import { v4 as uuidv4 } from 'uuid';
 

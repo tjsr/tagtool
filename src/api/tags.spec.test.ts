@@ -1,7 +1,7 @@
 import { ObjectId, UserId } from '../types';
 
 import { TagResponse } from './apiTypes';
-import { closeConnections } from '../database/mysqlConnections';
+import { closeConnectionPool } from '@tjsr/mysql-pool-utils';
 import { createRandomId } from '../utils/createRandomId';
 import { createRandomUserId } from '../auth/user';
 import express from 'express';
@@ -33,7 +33,7 @@ describe('GET /tags', () => {
   });
 
   afterAll(() => {
-    return closeConnections();
+    return closeConnectionPool();
   });
 
   test('Should return a 200 error if there\'s no session userInfo.', (done) => {

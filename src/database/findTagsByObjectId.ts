@@ -1,5 +1,7 @@
 import { ObjectId, Tag } from '../types';
-import { PoolConnection, getConnection } from './mysqlConnections';
+
+import { PoolConnection } from 'mysql';
+import { getConnection } from '@tjsr/mysql-pool-utils';
 
 export const findTagsByObjectId = async (
   objectId: ObjectId

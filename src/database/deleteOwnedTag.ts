@@ -1,6 +1,7 @@
 import { ObjectId, UserId } from '../types';
 
-import { getConnection } from './mysqlConnections';
+import { MysqlError } from 'mysql';
+import { getConnection } from '@tjsr/mysql-pool-utils';
 
 export const deleteOwnedTag = async (
   userId: UserId,
@@ -12,7 +13,7 @@ export const deleteOwnedTag = async (
     conn.query(
       `delete from Tags where createdByUserId=? and objectId=? and tag=?`,
       [userId, objectId, tag],
-      (err, results) => {
+      (err: MysqlError | null, results) => {
         conn.release();
         if (err) {
           reject(err);
