@@ -26,7 +26,7 @@ export const login = async (req: TagtoolRequest, res: express.Response) => {
       req.session.email = undefined;
       req.session.save((err) => {
         if (err) {
-          console.error(`Failed saving session`, err);
+          console.error('Failed saving session', err);
         }
       });
 
@@ -49,7 +49,7 @@ export const login = async (req: TagtoolRequest, res: express.Response) => {
     console.log(`User ${email} logged in and has userId ${user.userId}`);
     req.session.save((err) => {
       if (err) {
-        console.error(`Failed saving session`, err);
+        console.error('Failed saving session', err);
       }
     });
 

@@ -106,7 +106,7 @@ export const validateHasUserId = async (
   try {
     userId = getUserId(request);
   } catch (error) {
-    console.warn(`Got an exception when getting userId data`, error);
+    console.warn('Got an exception when getting userId data', error);
     return endWithJsonMessage(res, 500, 'Invalid user');
   }
   if (userId === undefined) {

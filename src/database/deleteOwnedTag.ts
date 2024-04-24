@@ -11,7 +11,7 @@ export const deleteOwnedTag = async (
   const conn = await getConnection();
   return new Promise((resolve, reject) => {
     conn.query(
-      `delete from Tags where createdByUserId=? and objectId=? and tag=?`,
+      'delete from Tags where createdByUserId=? and objectId=? and tag=?',
       [userId, objectId, tag],
       (err: MysqlError | null, results) => {
         conn.release();

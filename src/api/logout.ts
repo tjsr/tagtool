@@ -16,7 +16,7 @@ export const logout = async (request: TagtoolRequest, res: express.Response) => 
     request.session.email = undefined;
     request.session.save((err) => {
       if (err) {
-        console.error(`Failed saving session`, err);
+        console.error('Failed saving session', err);
       }
     });
 
