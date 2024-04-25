@@ -26,15 +26,8 @@ console.log(`Running docker build on ${dockerfile} => ${tag}... `);
 const child = spawn('docker',
   ['build', '-t', tag, '--secret', 'id=github,env=TAGTOOL_GITHUB_PAT', '--file', dockerfile, '.']);
 
-// docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool -f Dockerfile .
-
-child.stdout.on('data', (data) => {
-  console.log(`stdout: ${data}`);
-});
-
-child.stderr.on('data', (data) => {
-  console.error(`stderr: ${data}`);
-});
+child.stdout.on('data', (data) => process.stdout.write(data.toString()));
+child.stderr.on('data', (data) => process.stderr.write(data.toString()));
 
 child.on('close', (code: number|null) => {
   if (code !== 0) {
