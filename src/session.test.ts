@@ -1,9 +1,9 @@
-import { TagtoolSessionData, getSession, useSessionId } from './session';
+import { TagtoolSessionData, getSession, useSessionId } from './session.js';
 
 import { closeConnectionPool } from '@tjsr/mysql-pool-utils';
 import express from 'express';
 import session from 'express-session';
-import { startApp } from './server';
+import { startApp } from './server.js';
 import supertest from 'supertest';
 
 describe('useSessionId', () => {

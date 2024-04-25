@@ -2,12 +2,12 @@ import * as Express from 'express';
 import * as dotenv from 'dotenv';
 import * as expressSession from 'express-session';
 
-import { EmailAddress, UserId, uuid4, uuid5 } from './types';
+import { EmailAddress, UserId, uuid4, uuid5 } from './types.js';
+import express, { RequestHandler } from 'express';
 import session, { Session, SessionData } from 'express-session';
 
 import { IncomingHttpHeaders } from 'http';
-import { createRandomUserId } from './auth/user';
-import express from 'express';
+import { createRandomUserId } from './auth/user.js';
 import { getConnectionPool } from '@tjsr/mysql-pool-utils';
 import mySQLStore from 'express-mysql-session';
 import { v4 as uuidv4 } from 'uuid';
@@ -41,6 +41,7 @@ const sessionStoreOptions = {
   },
 };
 const MysqlSessionStore = mySQLStore(expressSession);
+// const connectionPool = await getConnectionPool();
 
 const sessionStore = new MysqlSessionStore(
   sessionStoreOptions /* session store options */,
@@ -49,7 +50,7 @@ const sessionStore = new MysqlSessionStore(
 
 const memoryStore = new session.MemoryStore();
 
-export const getSession = (useSessionStore: expressSession.Store = sessionStore) => {
+export const getSession = (useSessionStore: expressSession.Store = sessionStore): RequestHandler => {
   return session({
     cookie: {
       maxAge: IN_PROD ? TWO_HOURS : TWENTYFOUR_HOURS,

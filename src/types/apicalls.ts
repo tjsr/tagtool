@@ -1,4 +1,4 @@
-import { EmailAddress } from '../types';
+import { EmailAddress } from '../types.js';
 
 export type RestCallResult = {
   success: boolean;

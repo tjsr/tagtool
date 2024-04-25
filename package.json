@@ -6,6 +6,7 @@
   "author": "Tim Rowe <tim@tjsr.id.au>",
   "license": "ISC",
   "homepage": "./",
+  "type": "module",
   "scripts": {
     "clean": "rimraf dist build",
     "clean:all": "npm run clean && rimraf node_modules package-lock.json",

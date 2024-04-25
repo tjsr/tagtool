@@ -1,7 +1,7 @@
-import { TagtoolSessionData } from '../session';
+import { TagtoolSessionData } from '../session.js';
 import express from 'express';
 import session from 'express-session';
-import { startApp } from '../server';
+import { startApp } from '../server.js';
 import supertest from 'supertest';
 
 describe('API tests for tags', () => {

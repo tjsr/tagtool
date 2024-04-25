@@ -1,4 +1,4 @@
-import { ObjectId, Tag } from '../types';
+import { ObjectId, Tag } from '../types.js';
 
 import { PoolConnection } from 'mysql';
 import { getConnection } from '@tjsr/mysql-pool-utils';

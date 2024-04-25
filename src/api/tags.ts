@@ -1,14 +1,14 @@
-import { ObjectId, Tag, UserId } from '../types';
-import { TagResponse, TagResponseElement } from './apiTypes';
+import { ObjectId, Tag, UserId } from '../types.js';
+import { TagResponse, TagResponseElement } from './apiTypes.js';
 import express, { NextFunction } from 'express';
 
-import { TagtoolRequest } from '../session';
-import { deleteOwnedTag } from '../database/deleteOwnedTag';
-import { findTagsByObjectId } from '../database/findTagsByObjectId';
-import { getUserId } from '../auth/user';
-import { insertTag } from '../database/insertTag';
-import { validateObjectId } from '../utils/validateObjectId';
-import { validateTag } from '../utils/validateTag';
+import { TagtoolRequest } from '../session.js';
+import { deleteOwnedTag } from '../database/deleteOwnedTag.js';
+import { findTagsByObjectId } from '../database/findTagsByObjectId.js';
+import { getUserId } from '../auth/user.js';
+import { insertTag } from '../database/insertTag.js';
+import { validateObjectId } from '../utils/validateObjectId.js';
+import { validateTag } from '../utils/validateTag.js';
 
 const checkObjectExists = async (id: ObjectId): Promise<boolean> => {
   return Promise.resolve(id !== undefined);

@@ -1,4 +1,4 @@
-import { TagtoolRequest } from '../session';
+import { TagtoolRequest } from '../session.js';
 import express from 'express';
 
 export const session = (request: TagtoolRequest, response: express.Response) => {

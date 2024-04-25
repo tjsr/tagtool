@@ -1,8 +1,8 @@
-import { AuthenticationRestResult } from '../types/apicalls';
-import { TagtoolRequest } from '../session';
-import { UserId } from '../types';
+import { AuthenticationRestResult } from '../types/apicalls.js';
+import { TagtoolRequest } from '../session.js';
+import { UserId } from '../types.js';
 import express from 'express';
-import { getUserId } from '../auth/user';
+import { getUserId } from '../auth/user.js';
 
 export const logout = async (request: TagtoolRequest, res: express.Response) => {
   const userId: UserId = getUserId(request);
@@ -14,7 +14,7 @@ export const logout = async (request: TagtoolRequest, res: express.Response) => 
   try {
     request.session.userId = undefined;
     request.session.email = undefined;
-    request.session.save((err) => {
+    request.session.save((err: Error) => {
       if (err) {
         console.error('Failed saving session', err);
       }

@@ -1,16 +1,16 @@
 import * as dotenv from 'dotenv-flow';
 
-import { addTag, deleteTags, getTags, validateHasUserId, validateTags } from './api/tags';
-import { getSession, simpleSessionId } from './session';
+import { addTag, deleteTags, getTags, validateHasUserId, validateTags } from './api/tags.js';
+import { getSession, simpleSessionId } from './session.js';
 
-import { IPAddress } from './types';
-import { session as apiSession } from './api/session';
+import { IPAddress } from './types.js';
+import { session as apiSession } from './api/session.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
-import { getUser } from './api/user';
-import { login } from './api/login';
-import { logout } from './api/logout';
+import { getUser } from './api/user.js';
+import { login } from './api/login.js';
+import { logout } from './api/logout.js';
 import morgan from 'morgan';
 import requestIp from 'request-ip';
 import session from 'express-session';

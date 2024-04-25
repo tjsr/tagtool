@@ -1,7 +1,7 @@
-import { EmailAddress, UserId, uuid5 } from '../types';
+import { EmailAddress, UserId, uuid5 } from '../types.js';
 
-import { TagtoolRequest } from '../session';
-import { createRandomId } from '../utils/createRandomId';
+import { TagtoolRequest } from '../session.js';
+import { createRandomId } from '../utils/createRandomId.js';
 import { v5 as uuidv5 } from 'uuid';
 
 const USERID_UUID_NAMESPACE =

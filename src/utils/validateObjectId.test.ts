@@ -1,4 +1,4 @@
-import { validateObjectId } from './validateObjectId';
+import { validateObjectId } from './validateObjectId.js';
 
 describe('validateObjectId', () => {
   test('Should allow sane sized tag', () => {

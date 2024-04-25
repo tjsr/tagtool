@@ -1,14 +1,14 @@
-import { ObjectId, UserId } from '../types';
+import { ObjectId, UserId } from '../types.js';
 
-import { TagResponse } from './apiTypes';
+import { TagResponse } from './apiTypes.js';
 import { closeConnectionPool } from '@tjsr/mysql-pool-utils';
-import { createRandomId } from '../utils/createRandomId';
-import { createRandomUserId } from '../auth/user';
+import { createRandomId } from '../utils/createRandomId.js';
+import { createRandomUserId } from '../auth/user.js';
 import express from 'express';
-import { insertTag } from '../database/insertTag';
+import { insertTag } from '../database/insertTag.js';
 import { randomUUID } from 'crypto';
 import session from 'express-session';
-import { startApp } from '../server';
+import { startApp } from '../server.js';
 import supertest from 'supertest';
 
 describe('GET /tags', () => {

@@ -1,4 +1,4 @@
-import { ObjectId, UserId } from '../types';
+import { ObjectId, UserId } from '../types.js';
 
 import { MysqlError } from 'mysql';
 import { getConnection } from '@tjsr/mysql-pool-utils';

@@ -1,4 +1,4 @@
-import { ObjectId } from '../types';
+import { ObjectId } from '../types.js';
 import { isTestMode } from '@tjsr/simple-env-utils';
 import { validate } from 'uuid';
 
