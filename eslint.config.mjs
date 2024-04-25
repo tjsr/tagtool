@@ -10,7 +10,7 @@ export default tseslint.config( {
     ...tseslint.configs.recommended,
   ],
   files: ['**/*.ts'],
-  ignores: ['dist/**'],
+  ignores: ['dist/**', 'src/generated'],
   plugins: { 'prettier': eslintPluginPrettier },
   rules: {
     ...google.rules,

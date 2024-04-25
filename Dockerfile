@@ -3,22 +3,20 @@ ARG ALPINE_VERSION=3.19
 ARG NPM_VERSION=10.5.2
 FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} as tagtool-build-preflight
 
-RUN mkdir /opt/tagtool
+RUN --mount=type=cache,target=/root/.npm mkdir /opt/tagtool && npm config set fund false --location=global
 
 WORKDIR /opt/tagtool
 
 FROM tagtool-build-preflight as tagtool-build
 
-COPY src/ /opt/tagtool/src
+# First, files that are unlikely to change frequently.
+COPY [ "tsconfig.json", ".npmrc", "babel.config.js", ".prettierrc.json", "vite.config.ts", "index.ts", "index.html", "jest.config.json", "eslint.config.mjs", "/opt/tagtool/" ]
+# Then files that might.
+COPY [ "package.json", "package-lock.json", "/opt/tagtool/" ]
+COPY src /opt/tagtool/src
 COPY public/ /opt/tagtool/public
-COPY package*.json /opt/tagtool
-COPY index.ts /opt/tagtool
-COPY .eslintrc.json /opt/tagtool
-COPY babel.config.js /opt/tagtool
-COPY tsconfig.json /opt/tagtool
-COPY .npmrc /opt/tagtool
 
-RUN --mount=type=secret,id=github,target=/root/.npm/github_pat \
+RUN --mount=type=secret,id=github,target=/root/.npm/github_pat --mount=type=cache,target=/root/.npm \
   echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github_pat)" >> /root/.npmrc && \
   npm install && \
   npm run build && \
@@ -29,13 +27,12 @@ FROM tagtool-build-preflight as tagtool
 COPY package*.json /opt/tagtool
 COPY .npmrc /opt/tagtool
 
-RUN --mount=type=secret,id=github,target=/root/.npm/github_pat \
-  echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github_pat)" >> /root/.npmrc && \
-  npm install --omit=dev && \
+RUN --mount=type=secret,id=github,target=/root/.npm/github --mount=type=cache,target=/root/.npm \
+  echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github)" >> /root/.npmrc && \
+  npm install --omit=dev --no-fund && \
   rm -f /root/.npmrc
 
 COPY --from=tagtool-build /opt/tagtool/dist /opt/tagtool/dist
-COPY --from=tagtool-build /opt/tagtool/build /opt/tagtool/dist/build
 WORKDIR /opt/tagtool/dist
 
 EXPOSE 8242
