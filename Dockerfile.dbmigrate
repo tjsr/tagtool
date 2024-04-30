@@ -1,6 +1,6 @@
 ARG NODE_VERSION=20.12.2
 ARG ALPINE_VERSION=3.19
-ARG NPM_VERSION=10.5.2
+ARG NPM_VERSION=10.6.0
 FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} as tagtool-dbmigrate
 
 RUN --mount=type=cache,target=/root/.npm mkdir /opt/tagtool && npm config set fund false --location=global
@@ -9,6 +9,8 @@ COPY [ "package.json", "package-lock.json", "/opt/tagtool/" ]
 COPY prisma /opt/tagtool
 
 WORKDIR /opt/tagtool
+RUN --mount=type=secret,id=github,target=/root/.npm/github_pat if [ ! -s /root/.npm/github_pat ]; then echo "No github_pat secret found" && cat /root/.npm/github_pat && exit 127; fi
+
 RUN --mount=type=secret,id=github,target=/root/.npm/github_pat --mount=type=cache,target=/root/.npm \
   echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github_pat)" >> /root/.npmrc && \
   npm install && \

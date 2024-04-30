@@ -1,9 +1,10 @@
 import * as dotenv from 'dotenv-flow';
 
 import { addTag, deleteTags, getTags, validateHasUserId, validateTags } from './api/tags.js';
-import { getSession, simpleSessionId } from './session.js';
+import { getSession, simpleSessionId } from '@tjsr/user-session-middleware';
 
 import { IPAddress } from './types.js';
+import { TagtoolRequest } from './session.js';
 import { session as apiSession } from './api/session.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -32,7 +33,7 @@ export const getIp = (req: express.Request): IPAddress => {
     if (req.headers.forwarded) {
       const forwardedForHeader: string|undefined = req.headers.forwarded
         .split(';')
-        .find((header) => header.startsWith('for='));
+        .find((header: string) => header?.startsWith('for='));
       const forParts: string[]|undefined = forwardedForHeader?.split('=');
       if (forParts !== undefined && forParts.length == 2) {
         return forParts[1];
@@ -53,7 +54,7 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   app.use(requestIp.mw());
   app.set('trust proxy', true);
 
-  app.use(function (req, res, next) {
+  app.use((req: TagtoolRequest, res: express.Response, next) => {
     res.header('Access-Control-Expose-Headers', '*');
     next();
   });
@@ -71,7 +72,7 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   );
   app.use(express.json());
 
-  app.use((req, res, next) => {
+  app.use((req: TagtoolRequest, res, next) => {
     res.set('Set-Cookie', `sessionId=${req.session.id}`);
     next();
   });
