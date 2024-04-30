@@ -1,16 +1,25 @@
-import { TagtoolSessionData, getSession, useSessionId } from './session.js';
+import {
+  closeConnectionPool,
+  verifyDatabaseReady,
+} from '@tjsr/mysql-pool-utils';
+import { getSession, useSessionId } from '@tjsr/user-session-middleware';
 
-import { closeConnectionPool } from '@tjsr/mysql-pool-utils';
+import { TagtoolSessionData } from './session.js';
+import { connectionDetails } from './setup-tests.js';
 import express from 'express';
 import session from 'express-session';
 import { startApp } from './server.js';
 import supertest from 'supertest';
 
 describe('useSessionId', () => {
-  let app:express.Express;
-  let realApp:express.Express;
+  let app: express.Express;
+  let realApp: express.Express;
   let memoryStore: session.MemoryStore;
   let realAppMemoryStore: session.MemoryStore;
+
+  beforeAll(async () => {
+    await verifyDatabaseReady(connectionDetails);
+  });
 
   beforeAll((done) => {
     memoryStore = new session.MemoryStore();
@@ -63,7 +72,6 @@ describe('useSessionId', () => {
     expect(response.status).toBe(401);
     return Promise.resolve();
   });
-
 
   test('Should accept a request with no sessionId', (done) => {
     supertest(app)

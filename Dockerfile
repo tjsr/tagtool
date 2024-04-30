@@ -1,6 +1,6 @@
 ARG NODE_VERSION=20.12.2
 ARG ALPINE_VERSION=3.19
-ARG NPM_VERSION=10.5.2
+ARG NPM_VERSION=10.6.0
 FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} as tagtool-build-preflight
 
 RUN --mount=type=cache,target=/root/.npm mkdir /opt/tagtool && npm config set fund false --location=global

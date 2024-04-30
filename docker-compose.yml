@@ -1,0 +1,44 @@
+services:
+  mysqldb:
+    container_name: tagtool_mysqldb
+    build:
+      args:
+        - MYSQL_VERSION=${MYSQL_CI_VERSION:-5.7}
+      context: .
+      dockerfile_inline: |
+        ARG MYSQL_VERSION 5.7
+        FROM mysql:${MYSQL_VERSION:-5.7} as mysql
+
+        #COPY resources/*.sql /docker-entrypoint-initdb.d/
+    # env_file:
+    # - ./.env.test
+    environment:
+      MYSQL_ROOT_PASSWORD: cirootpassword
+      MYSQL_DATABASE: tagtool_ci
+      MYSQL_USER: ciuser
+      MYSQL_PASSWORD: cipassword
+      MYSQL_HOST: '127.0.0.1'
+    ports:
+    - "${MYSQL_CI_HOST_PORT:-23407}:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysql", "-h", "127.0.0.1", "--silent", "-uciuser", "-pcipassword", "-e", "SELECT 1"]
+      interval: 3s
+      retries: 5
+      start_period: 30s
+  cidbmig:
+    container_name: tagtool_dbmigration
+    build:
+      context: .
+      dockerfile: Dockerfile.dbmigrate
+      secrets:
+      - github
+    environment:
+    - PRISMA_DATABASE_URL=mysql://ciuser:cipassword@tagtool_mysqldb:3306/tagtool_ci
+    depends_on:
+    - mysqldb
+
+secrets:
+  github:
+    environment: TAGTOOL_GITHUB_PAT
+    # file: TAGTOOL_GITHUB_PAT
