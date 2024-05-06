@@ -10,7 +10,7 @@ WORKDIR /opt/tagtool
 FROM tagtool-build-preflight as tagtool-build
 
 # First, files that are unlikely to change frequently.
-COPY [ "tsconfig.json", ".npmrc", "babel.config.js", ".prettierrc.json", "vite.config.ts", "index.ts", "index.html", "jest.config.json", "eslint.config.mjs", "/opt/tagtool/" ]
+COPY [ "tsconfig.json", ".npmrc", "babel.config.js", ".prettierrc.json", "vite.config.ts", "index.ts", "index.html", "jest.config.ts", "eslint.config.mjs", "/opt/tagtool/" ]
 # Then files that might.
 COPY [ "package.json", "package-lock.json", "/opt/tagtool/" ]
 COPY src /opt/tagtool/src

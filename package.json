@@ -22,7 +22,7 @@
     "docker:build": "npx tsx bin/docker-build-with-secret.ts tagtool Dockerfile",
     "docker:build:dbmigrate": "npx tsx bin/docker-build-with-secret.ts tagtool-dbmigrate Dockerfile.dbmigrate",
     "docker:test": "npm run docker:build && docker run --rm --name tagtool-test -it tagtool npm i && npm test",
-    "link": "npm link @tjsr/user-session-middleware @tjsr/simple-env-utils @tjsr/mysql-pool-utils",
+    "link": "npm link @tjsr/user-session-middleware @tjsr/simple-env-utils @tjsr/mysql-pool-utils @tjsr/eslint-config",
     "lint": "eslint ",
     "lint:fix": "eslint --fix \"./src/**/*.{ts,tsx}\"",
     "prettier": "prettier --single-quote --write \"./src/**/*.{ts,tsx}\"",
@@ -31,7 +31,8 @@
     "db:upgrade": "prisma migrate dev",
     "db:upgrade:deploy": "prisma migrate deploy",
     "docker:build:old": "docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool -f Dockerfile .",
-    "docker:build:dbmigrate:old": "docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool-dbmigrate -f Dockerfile.dbmigrate ."
+    "docker:build:dbmigrate:old": "docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool-dbmigrate -f Dockerfile.dbmigrate .",
+    "postinstall": "npm run link"
   },
   "repository": {
     "type": "git",
@@ -44,7 +45,6 @@
     "url": "https://github.com/tjsr/tagtool/issues"
   },
   "dependencies": {
-    "@eslint/js": "^9.1.1",
     "@tjsr/eslint-config": "github:tjsr/eslint-config#main",
     "@tjsr/mysql-pool-utils": "^0.1.0",
     "@tjsr/simple-env-utils": "^0.0.10",
@@ -69,6 +69,7 @@
     "web-vitals": "^3.5.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.2.0",
     "@jest/globals": "^29.7.0",
     "@prisma/client": "^4.12.0",
     "@types/cookie-parser": "^1.4.7",
@@ -78,7 +79,7 @@
     "@types/jest": "^29.5.12",
     "@types/morgan": "^1.9.9",
     "@types/mysql": "^2.15.26",
-    "@types/node": "^20.12.7",
+    "@types/node": "^20.12.9",
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
     "@types/request-ip": "^0.0.41",
@@ -97,13 +98,13 @@
     "prettier-plugin-sort-members": "^0.1.2",
     "prisma": "^4.12.0",
     "rimraf": "^5.0.5",
-    "supertest": "^6.3.4",
+    "supertest": "^7.0.0",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.9.3",
     "typescript": "^5.4.5",
-    "typescript-eslint": "^7.7.1",
-    "vite": "^5.2.10"
+    "typescript-eslint": "^7.8.0",
+    "vite": "^5.2.11"
   },
   "overrides": {
     "formidable": ">=3.2.4",

@@ -1,10 +1,9 @@
 import { ObjectId, UserId } from '../types.js';
-import {
-  closeConnectionPool,
-  verifyDatabaseReady,
-} from '@tjsr/mysql-pool-utils';
 
 import { TagResponse } from './apiTypes.js';
+import {
+  closeConnectionPool
+} from '@tjsr/mysql-pool-utils';
 import { connectionDetails } from '../setup-tests.js';
 import { createRandomId } from '../utils/createRandomId.js';
 import { createRandomUserId } from '../auth/user.js';
