@@ -1,3 +1,5 @@
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+
 import { TagtoolSessionData } from '../session.js';
 import express from 'express';
 import session from 'express-session';
@@ -5,7 +7,7 @@ import { startApp } from '../server.js';
 import supertest from 'supertest';
 
 describe('API tests for tags', () => {
-  let app:express.Express;
+  let app: express.Express;
   const testSessionId = 's1234';
   const testUserId = 'u1234';
 

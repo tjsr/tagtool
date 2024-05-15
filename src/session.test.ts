@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
   closeConnectionPool,
   verifyDatabaseReady,
@@ -21,7 +22,7 @@ describe('useSessionId', () => {
     await verifyDatabaseReady(connectionDetails);
   });
 
-  beforeAll((done) => {
+  beforeAll(() => {
     memoryStore = new session.MemoryStore();
     realAppMemoryStore = new session.MemoryStore();
 
@@ -36,64 +37,88 @@ describe('useSessionId', () => {
 
     realApp = startApp(realAppMemoryStore);
 
-    done();
+    // done();
   });
 
-  afterAll(() => {
-    return closeConnectionPool();
+  afterAll(async () => {
+    return Promise.resolve(); // closeConnectionPool();
   });
 
-  test('Should reject a made-up SessionID that we dont know about', (done) => {
-    supertest(app)
-      .get('/')
-      .set('x-session-id', 'abcd-1234')
-      .set('Content-Type', 'application/json')
-      .expect(401, () => {
-        done();
-      });
-  });
+  test(
+    'Should reject a made-up SessionID that we dont know about',
+    {},
+    async () =>
+      new Promise<void>((done) => {
+        supertest(app)
+          .get('/')
+          .set('x-session-id', 'abcd-1234')
+          .set('Content-Type', 'application/json')
+          .expect(401, () => {
+            done();
+          });
+      }),
+  );
 
-  test('Should reject a made-up SessionID that we dont know about in real app', (done) => {
-    supertest(realApp)
-      .get('/')
-      .set('x-session-id', 'abcd-1234')
-      .set('Content-Type', 'application/json')
-      .expect(401, () => {
-        done();
-      });
-  });
+  test(
+    'Should reject a made-up SessionID that we dont know about in real app',
+    {},
+    async () =>
+      new Promise<void>((done) => {
+        supertest(realApp)
+          .get('/')
+          .set('x-session-id', 'abcd-1234')
+          .set('Content-Type', 'application/json')
+          .expect(401, () => {
+            done();
+          });
+      }),
+  );
 
-  test('Should reject a made-up SessionID that we dont know about in real app- mode B', async () => {
-    const response = await supertest(realApp)
-      .get('/')
-      .set('x-session-id', 'abcd-1234')
-      .set('Content-Type', 'application/json');
+  test(
+    'Should reject a made-up SessionID that we dont know about in real app- mode B',
+    {},
+    async () => {
+      const response = await supertest(realApp)
+        .get('/')
+        .set('x-session-id', 'abcd-1234')
+        .set('Content-Type', 'application/json');
 
-    expect(response.status).toBe(401);
-    return Promise.resolve();
-  });
+      expect(response.status).toBe(401);
+      return Promise.resolve();
+    },
+  );
 
-  test('Should accept a request with no sessionId', (done) => {
-    supertest(app)
-      .get('/')
-      .set('Content-Type', 'application/json')
-      .expect(200, () => {
-        done();
-      });
-  });
+  test(
+    'Should accept a request with no sessionId',
+    {},
+    async () =>
+      new Promise<void>((done) => {
+        supertest(app)
+          .get('/')
+          .set('Content-Type', 'application/json')
+          .expect(200, () => {
+            done();
+          });
+      }),
+  );
 
-  test('Should accept a request with a valid sessionId', (done) => {
-    const testUserId = 'user-4321';
-    memoryStore.set('abcd-1234', {
-      userId: testUserId,
-    } as TagtoolSessionData);
+  test(
+    'Should accept a request with a valid sessionId',
+    {},
+    async () =>
+      new Promise<void>((done) => {
+        const testUserId = 'user-4321';
+        memoryStore.set('abcd-1234', {
+          userId: testUserId,
+        } as TagtoolSessionData);
 
-    supertest(app)
-      .get('/')
-      .set('x-session-id', 'abcd-1234')
-      .set('Content-Type', 'application/json')
-      .expect(200, () => {
-        done();
-      });
-  });
+        supertest(app)
+          .get('/')
+          .set('x-session-id', 'abcd-1234')
+          .set('Content-Type', 'application/json')
+          .expect(200, () => {
+            done();
+          });
+      }),
+  );
 });

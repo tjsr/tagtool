@@ -73,6 +73,12 @@ const tagsToTagResponse = (tags: Tag[], userId: UserId|undefined): TagResponse =
     throw new Error('Tags must be defined and not empty');
   }
   const objectId: ObjectId = tags[0].objectId;
+  
+  if (
+    tags.filter((current: Tag) => current.objectId === undefined).length !== 0
+  ) {
+    throw new Error('objectId must be defined on each returned tag');
+  }
   const responseTags: TagResponseElement[] = [];
   tags.forEach((t) => {
     const foundTag:TagResponseElement|undefined = responseTags.find((ft) => ft.tag === t.tag);

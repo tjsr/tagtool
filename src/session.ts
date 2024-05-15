@@ -11,6 +11,7 @@ import { getCallbackConnectionPromise, getConnection, getConnectionPool } from '
 
 import MySQLStore from 'express-mysql-session';
 import { Session } from 'express-session';
+import { loadEnv } from '@tjsr/simple-env-utils';
 
 // const SESSION_ID_NAMESPACE = '0fac0952-9b54-43a9-be74-8d60533aa667';
 
@@ -20,14 +21,15 @@ export interface TagtoolSessionData extends SystemSessionDataType {
   userId: UserId;
 }
 
-export interface TagtoolRequest extends SystemHttpRequestType<TagtoolSessionData> {
+export interface TagtoolRequest
+  extends SystemHttpRequestType<TagtoolSessionData> {
   newSessionIdGenerated?: boolean;
   session: Session & Partial<TagtoolSessionData>;
 }
 
 export interface TagtoolResponse extends express.Response {}
 
-dotenv.config();
+loadEnv();
 
 const defaultSessionStoreOptions: MySQLStore.Options = {
   schema: {

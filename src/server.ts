@@ -1,6 +1,10 @@
-import * as dotenv from 'dotenv-flow';
-
-import { addTag, deleteTags, getTags, validateHasUserId, validateTags } from './api/tags.js';
+import {
+  addTag,
+  deleteTags,
+  getTags,
+  validateHasUserId,
+  validateTags,
+} from './api/tags.js';
 import { getSession, simpleSessionId } from '@tjsr/user-session-middleware';
 
 import { IPAddress } from './types.js';
@@ -10,13 +14,14 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import { getUser } from './api/user.js';
+import { loadEnv } from '@tjsr/simple-env-utils';
 import { login } from './api/login.js';
 import { logout } from './api/logout.js';
 import morgan from 'morgan';
 import requestIp from 'request-ip';
 import session from 'express-session';
 
-dotenv.config();
+loadEnv();
 
 const morganLog = morgan('common');
 // process.env.PRODUCTION =='true' ? 'common' : 'dev'
@@ -24,28 +29,30 @@ const morganLog = morgan('common');
 const corsOptions = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Expose-Headers': '*',
-  'optionsSuccessStatus': 200,
-  'origin': '*',
+  optionsSuccessStatus: 200,
+  origin: '*',
 };
 
 export const getIp = (req: express.Request): IPAddress => {
   try {
     if (req.headers.forwarded) {
-      const forwardedForHeader: string|undefined = req.headers.forwarded
+      const forwardedForHeader: string | undefined = req.headers.forwarded
         .split(';')
         .find((header: string) => header?.startsWith('for='));
-      const forParts: string[]|undefined = forwardedForHeader?.split('=');
+      const forParts: string[] | undefined = forwardedForHeader?.split('=');
       if (forParts !== undefined && forParts.length == 2) {
         return forParts[1];
       }
     }
   } catch (err) {
-    console.warn('Got part of forwarded header, but couldn\'t parse it.');
+    console.warn("Got part of forwarded header, but couldn't parse it.");
   }
   return (req as any).clientIp;
 };
 
-export const startApp = (sessionStore?: session.MemoryStore): express.Express => {
+export const startApp = (
+  sessionStore?: session.MemoryStore,
+): express.Express => {
   const app: express.Express = express();
   if (process.env['USE_LOGGING'] !== 'false') {
     app.use(morganLog);
@@ -68,7 +75,7 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   app.use(
     express.urlencoded({
       extended: true,
-    })
+    }),
   );
   app.use(express.json());
 
