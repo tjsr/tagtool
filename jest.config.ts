@@ -1,7 +1,7 @@
 import type { JestConfigWithTsJest } from 'ts-jest';
-import dotenvFlow from 'dotenv-flow';
+import { loadEnv } from '@tjsr/simple-env-utils';
 
-dotenvFlow.config({ silent: true });
+loadEnv({ path: process.cwd() });
 
 const config: JestConfigWithTsJest = {
   bail: 1,
@@ -10,7 +10,7 @@ const config: JestConfigWithTsJest = {
   preset: 'ts-jest',
   setupFiles: ['<rootDir>/src/setup-tests.ts'],
   testEnvironment: 'node',
-  testRunner: 'jest-jasmine2',
+  testRunner: 'node',
   extensionsToTreatAsEsm: ['.ts'],
   moduleFileExtensions: ['js', 'mjs', 'json', 'ts'],
   moduleNameMapper: {

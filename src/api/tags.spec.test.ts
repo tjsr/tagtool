@@ -1,9 +1,18 @@
 import { ObjectId, UserId } from '../types.js';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from 'vitest';
+import {
+  closeConnectionPool,
+  verifyDatabaseReady,
+} from '@tjsr/mysql-pool-utils';
 
 import { TagResponse } from './apiTypes.js';
-import {
-  closeConnectionPool
-} from '@tjsr/mysql-pool-utils';
 import { connectionDetails } from '../setup-tests.js';
 import { createRandomId } from '../utils/createRandomId.js';
 import { createRandomUserId } from '../auth/user.js';
@@ -22,6 +31,7 @@ describe('GET /tags', () => {
     'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
 
   beforeAll(async () => {
+    console.log('connectionDetails:', JSON.stringify(connectionDetails));
     const dbReadyPromise: Promise<void> =
       verifyDatabaseReady(connectionDetails);
     dbReadyPromise.catch((err) => {
@@ -56,7 +66,8 @@ describe('GET /tags', () => {
         expect(response.body.message).not.toBe(
           `Invalid objectId ${generatedObjectId}`,
         );
-        done();
+        return Promise.resolve();
+        // done();
       });
   });
 

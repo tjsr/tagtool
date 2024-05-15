@@ -1,10 +1,9 @@
-import * as dotenv from 'dotenv';
+import { loadEnv, requireEnv } from '@tjsr/simple-env-utils';
 
 import express from 'express';
-import { requireEnv } from '@tjsr/simple-env-utils';
 import { startApp } from './src/server.js';
 
-dotenv.config();
+loadEnv();
 
 requireEnv('SESSION_SECRET');
 requireEnv('USERID_UUID_NAMESPACE');

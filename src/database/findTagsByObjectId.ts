@@ -2,24 +2,27 @@ import { FieldPacket, QueryResult } from 'mysql2/promise';
 import { ObjectId, Tag, UserId } from '../types.js';
 import { getConnection, mysqlQuery, safeReleaseConnection } from '@tjsr/mysql-pool-utils';
 
+type TagQueryResult = [ObjectId, UserId, string];
+
 export const findTagsByObjectId = async (
-  objectId: ObjectId
+  objectId: ObjectId,
 ): Promise<Tag[]> => {
   // const conn = (await getConnection()).promise();
   const conn = await getConnection();
   return new Promise((resolve, reject) => {
     mysqlQuery(
-        'select objectId, createdByUserId, tag from Tags where objectId=?',
-        [objectId]).then(([queryResult, fieldPacket]: [QueryResult, FieldPacket[]]) => {
-        
-        const tags: Tag[] = queryResult as Tag[];
+      'select objectId, createdByUserId, tag from Tags where objectId=?',
+      [objectId],
+    )
+      .then(([queryResult, fieldPacket]: [QueryResult, FieldPacket[]]) => {
+        const tags: TagQueryResult[] = queryResult as TagQueryResult[];
         // Convert to an in-memory array so the query cursor is closed off.
-        const outputTags: Tag[] = tags.map((queryTag: Tag) => {
+        const outputTags: Tag[] = tags.map((queryTag: TagQueryResult) => {
           const outputTag: Tag = {
-            createdByUserId: queryTag.createdByUserId as UserId,
-            objectId: queryTag.objectId as ObjectId,
-            tag: queryTag.tag as string
-          };
+            createdByUserId: queryTag[1] as UserId,
+            objectId: queryTag[0] as ObjectId,
+            tag: queryTag[2] as string,
+          } as Tag;
           return outputTag;
         });
         safeReleaseConnection(conn);
@@ -40,12 +43,12 @@ export const findTagsByObjectId = async (
         //   }
         //   tags.push(currentTag);
         // }
-
-    }).catch((err) => {
-      safeReleaseConnection(conn);
-      conn.release();
-      return reject(err);
-    });
+      })
+      .catch((err) => {
+        safeReleaseConnection(conn);
+        conn.release();
+        return reject(err);
+      });
     //     (err, results) => {
     //       if (err) {
     //       }

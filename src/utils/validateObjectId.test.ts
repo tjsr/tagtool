@@ -1,3 +1,5 @@
+import { describe, expect, test } from 'vitest';
+
 import { validateObjectId } from './validateObjectId.js';
 
 describe('validateObjectId', () => {
@@ -6,7 +8,9 @@ describe('validateObjectId', () => {
   });
 
   test('Should reject really long tag', () => {
-    expect(validateObjectId('abcdef01234567890abcdef01234567890abcdef01234567890')).toBe(false);
+    expect(
+      validateObjectId('abcdef01234567890abcdef01234567890abcdef01234567890'),
+    ).toBe(false);
   });
 
   test('Should reject tag with invalid characters', () => {
@@ -17,4 +21,3 @@ describe('validateObjectId', () => {
     expect(validateObjectId('550e8400-e29b-41d4-a716-446655440000')).toBe(true);
   });
 });
-

@@ -1,10 +1,9 @@
-import * as dotenv from 'dotenv';
-
 import { EmailAddress } from '../types.js';
 import { UserModel } from '../types/model.js';
 import { createUserIdFromEmail } from '../auth/user.js';
+import { loadEnv } from '@tjsr/simple-env-utils';
 
-dotenv.config();
+loadEnv();
 
 export const getDbUserByEmail = (email: EmailAddress): UserModel => {
   return {
