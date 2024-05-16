@@ -29,6 +29,8 @@
     "lint:fix": "eslint --fix \"./src/**/*.{ts,tsx}\"",
     "prettier": "prettier --single-quote --write \"./src/**/*.{ts,tsx}\"",
     "format": "npm run prettier && npm run lint",
+    "db:up": "docker compose build && docker compose up -d",
+    "db:down": "docker compose down",
     "db:init:dev": "prisma migrate dev --name init",
     "db:upgrade": "prisma migrate dev",
     "db:upgrade:deploy": "prisma migrate deploy",
