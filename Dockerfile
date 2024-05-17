@@ -10,7 +10,7 @@ WORKDIR /opt/tagtool
 FROM tagtool-build-preflight as tagtool-build
 
 # First, files that are unlikely to change frequently.
-COPY [ "tsconfig.json", ".npmrc", "babel.config.js", ".prettierrc.json", "vite.config.ts", "index.ts", "index.html", "jest.config.ts", "eslint.config.mjs", "/opt/tagtool/" ]
+COPY [ "tsconfig.json", ".npmrc", "babel.config.js", ".prettierrc.json", "vite.config.ts", "index.ts", "index.html", "eslint.config.mjs", "/opt/tagtool/" ]
 # Then files that might.
 COPY [ "package.json", "package-lock.json", "/opt/tagtool/" ]
 COPY src /opt/tagtool/src
@@ -18,7 +18,7 @@ COPY public/ /opt/tagtool/public
 
 RUN --mount=type=secret,id=github,target=/root/.npm/github_pat --mount=type=cache,target=/root/.npm \
   echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github_pat)" >> /root/.npmrc && \
-  npm install && \
+  npm ci --no-fund && \
   npm run build && \
   rm -f /root/.npmrc
 
@@ -27,9 +27,9 @@ FROM tagtool-build-preflight as tagtool
 COPY package*.json /opt/tagtool
 COPY .npmrc /opt/tagtool
 
-RUN --mount=type=secret,id=github,target=/root/.npm/github --mount=type=cache,target=/root/.npm \
-  echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github)" >> /root/.npmrc && \
-  npm install --omit=dev --no-fund && \
+RUN --mount=type=secret,id=github,target=/root/.npm/github_pat --mount=type=cache,target=/root/.npm \
+  echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github_pat)" >> /root/.npmrc && \
+  npm ci --omit=dev --no-fund && \
   rm -f /root/.npmrc
 
 COPY --from=tagtool-build /opt/tagtool/dist /opt/tagtool/dist
