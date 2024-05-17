@@ -31,14 +31,19 @@ describe('GET /tags', () => {
   const generatedTag =
     'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
 
-  beforeAll(async () => {
-    console.debug('connectionDetails for test run:', JSON.stringify(connectionDetails, elideValues));
-    const dbReadyPromise: Promise<void> = verifyDatabaseReady(connectionDetails);
-    dbReadyPromise.catch((err) => {
-      return fail(err);
-    });
-    await dbReadyPromise;
-  });
+  beforeAll(
+    async () =>
+      new Promise((resolve, fail) => {
+        console.debug('connectionDetails for test run:', JSON.stringify(connectionDetails, elideValues));
+        const dbReadyPromise: Promise<void> = verifyDatabaseReady(connectionDetails);
+        return dbReadyPromise
+          .then(() => resolve())
+          .catch((err) => {
+            console.error('Failed connecting to database.');
+            return fail(err);
+          });
+      })
+  );
 
   beforeAll(async () => {
     await insertTag(generatedUid, generatedObjectId, generatedTag);
