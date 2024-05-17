@@ -1,4 +1,4 @@
-ARG NODE_VERSION=20.13.2
+ARG NODE_VERSION=20.13.1
 ARG ALPINE_VERSION=3.19
 ARG NPM_VERSION=10.8.0
 FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} as tagtool-build-preflight
