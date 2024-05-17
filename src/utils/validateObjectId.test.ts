@@ -9,7 +9,7 @@ describe('validateObjectId', () => {
 
   test('Should reject really long tag', () => {
     expect(
-      validateObjectId('abcdef01234567890abcdef01234567890abcdef01234567890'),
+      validateObjectId('abcdef01234567890abcdef01234567890abcdef01234567890')
     ).toBe(false);
   });
 

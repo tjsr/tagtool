@@ -4,17 +4,12 @@ import { getConnection, mysqlQuery, safeReleaseConnection } from '@tjsr/mysql-po
 
 type TagQueryResult = [ObjectId, UserId, string];
 
-export const findTagsByObjectId = async (
-  objectId: ObjectId,
-): Promise<Tag[]> => {
+export const findTagsByObjectId = async (objectId: ObjectId): Promise<Tag[]> => {
   // const conn = (await getConnection()).promise();
   const conn = await getConnection();
   return new Promise((resolve, reject) => {
-    mysqlQuery(
-      'select objectId, createdByUserId, tag from Tags where objectId=?',
-      [objectId],
-    )
-      .then(([queryResult, fieldPacket]: [QueryResult, FieldPacket[]]) => {
+    mysqlQuery('select objectId, createdByUserId, tag from Tags where objectId=?', [objectId])
+      .then(([queryResult, _fieldPacket]: [QueryResult, FieldPacket[]]) => {
         const tags: TagQueryResult[] = queryResult as TagQueryResult[];
         // Convert to an in-memory array so the query cursor is closed off.
         const outputTags: Tag[] = tags.map((queryTag: TagQueryResult) => {

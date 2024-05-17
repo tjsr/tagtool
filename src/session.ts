@@ -1,16 +1,12 @@
-import * as dotenv from 'dotenv';
 import * as expressSession from 'express-session';
 
 import { EmailAddress, UserId } from './types.js';
-import {
-  SystemHttpRequestType,
-  SystemSessionDataType,
-} from '@tjsr/user-session-middleware';
-import express, { RequestHandler } from 'express';
-import { getCallbackConnectionPromise, getConnection, getConnectionPool } from '@tjsr/mysql-pool-utils';
+import { SystemHttpRequestType, SystemSessionDataType } from '@tjsr/user-session-middleware';
 
 import MySQLStore from 'express-mysql-session';
 import { Session } from 'express-session';
+import express from 'express';
+import { getCallbackConnectionPromise } from '@tjsr/mysql-pool-utils';
 import { loadEnv } from '@tjsr/simple-env-utils';
 
 // const SESSION_ID_NAMESPACE = '0fac0952-9b54-43a9-be74-8d60533aa667';
@@ -21,8 +17,7 @@ export interface TagtoolSessionData extends SystemSessionDataType {
   userId: UserId;
 }
 
-export interface TagtoolRequest
-  extends SystemHttpRequestType<TagtoolSessionData> {
+export interface TagtoolRequest extends SystemHttpRequestType<TagtoolSessionData> {
   newSessionIdGenerated?: boolean;
   session: Session & Partial<TagtoolSessionData>;
 }
@@ -42,14 +37,17 @@ const defaultSessionStoreOptions: MySQLStore.Options = {
   },
 };
 
-export const getMysqlSessionStore = async (sessionStoreOptions?: MySQLStore.Options): Promise<MySQLStore.MySQLStore> => {
+export const getMysqlSessionStore = async (
+  sessionStoreOptions?: MySQLStore.Options
+): Promise<MySQLStore.MySQLStore> => {
+  // eslint-disable-next-line new-cap
   const MysqlSessionStore = MySQLStore(expressSession);
   const connection = await getCallbackConnectionPromise();
-  
+
   const mysqlSessionStore = new MysqlSessionStore(
-    sessionStoreOptions ?? defaultSessionStoreOptions/* session store options */,
-    connection,
+    sessionStoreOptions ?? defaultSessionStoreOptions /* session store options */,
+    connection
   );
-  
+
   return Promise.resolve(mysqlSessionStore);
 };
