@@ -16,6 +16,7 @@ import { TagResponse } from './apiTypes.js';
 import { connectionDetails } from '../setup-tests.js';
 import { createRandomId } from '../utils/createRandomId.js';
 import { createRandomUserId } from '../auth/user.js';
+import { elideValues } from '../utils/elideValues.js';
 import express from 'express';
 import { insertTag } from '../database/insertTag.js';
 import { randomUUID } from 'crypto';
@@ -31,7 +32,10 @@ describe('GET /tags', () => {
     'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
 
   beforeAll(async () => {
-    console.log('connectionDetails:', JSON.stringify(connectionDetails));
+    console.debug(
+      'connectionDetails for test run:',
+      JSON.stringify(connectionDetails, elideValues),
+    );
     const dbReadyPromise: Promise<void> =
       verifyDatabaseReady(connectionDetails);
     dbReadyPromise.catch((err) => {
