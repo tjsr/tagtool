@@ -1,9 +1,11 @@
-ARG NODE_VERSION=20.12.2
+ARG NODE_VERSION=20.13.1
 ARG ALPINE_VERSION=3.19
-ARG NPM_VERSION=10.6.0
+ARG NPM_VERSION=10.8.0
 FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} as tagtool-dbmigrate
 
-RUN --mount=type=cache,target=/root/.npm mkdir /opt/tagtool && npm config set fund false --location=global
+RUN --mount=type=cache,target=/root/.npm mkdir /opt/tagtool && \
+  npm config set fund false --location=global && \
+  npm config set update-notifier false --location=global
 
 COPY [ "package.json", "package-lock.json", ".npmrc", "/opt/tagtool/" ]
 COPY prisma /opt/tagtool
