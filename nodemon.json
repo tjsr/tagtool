@@ -1,0 +1,11 @@
+{
+  "delay": 500,
+  "exec": "tsc --noEmit && node --import=./register.js --debug-port 8999 ./index.ts",
+  "execMap": {
+    "ts": "ts-node"
+  },
+  "ignore": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+  "ext": "ts",
+  "watch": ["src", "nodemon.json", "./*.ts"],
+  "verbose": true
+}

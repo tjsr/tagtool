@@ -24,7 +24,7 @@ export default defineConfig({
   // plugins: [react(), viteTsconfigPaths(), svgrPlugin()],
   server: {
     proxy: {
-      '/^/(login|logout|session|debugHeaders|submit).*': {
+      '/^/(login|logout|session|debugHeaders|submit|tags).*': {
         changeOrigin: true,
         target: 'http://localhost:8280/(\\1)',
         ws: true,

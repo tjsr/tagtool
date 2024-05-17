@@ -15,6 +15,8 @@ import morgan from 'morgan';
 import requestIp from 'request-ip';
 import session from 'express-session';
 
+export const DEFAULT_HTTP_PORT = 8242;
+
 loadEnv();
 
 const morganLog = morgan('common');
