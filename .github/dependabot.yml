@@ -16,11 +16,11 @@ updates:
     schedule:
       interval: 'daily'
     assignees:
-      - 'tjsr'
+    - 'tjsr'
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       # Check for updates to GitHub Actions every week
       interval: "weekly"
     assignees:
-      - 'tjsr'
+    - 'tjsr'
