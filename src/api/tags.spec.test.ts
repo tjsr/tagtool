@@ -32,12 +32,8 @@ describe('GET /tags', () => {
     'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
 
   beforeAll(async () => {
-    console.debug(
-      'connectionDetails for test run:',
-      JSON.stringify(connectionDetails, elideValues),
-    );
-    const dbReadyPromise: Promise<void> =
-      verifyDatabaseReady(connectionDetails);
+    console.debug('connectionDetails for test run:', JSON.stringify(connectionDetails, elideValues));
+    const dbReadyPromise: Promise<void> = verifyDatabaseReady(connectionDetails);
     dbReadyPromise.catch((err) => {
       return fail(err);
     });
@@ -63,13 +59,11 @@ describe('GET /tags', () => {
     return closeConnectionPool();
   });
 
-  test("Should return a 200 error if there's no session userInfo.", (done) => {
+  test("Should return a 200 error if there's no session userInfo.", (_done) => {
     supertest(app)
       .get(`/tags/${generatedObjectId}`)
       .expect(200, (err, response) => {
-        expect(response.body.message).not.toBe(
-          `Invalid objectId ${generatedObjectId}`,
-        );
+        expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
         return Promise.resolve();
         // done();
       });
@@ -78,9 +72,7 @@ describe('GET /tags', () => {
   test("Should return a 200 error if there's no session userInfo.", async () => {
     const response = await supertest(app).get(`/tags/${generatedObjectId}`);
 
-    expect(response.body.message).not.toBe(
-      `Invalid objectId ${generatedObjectId}`,
-    );
+    expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
     expect(response.statusCode).toBe(200);
     return Promise.resolve();
   });

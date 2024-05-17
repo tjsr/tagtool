@@ -1,8 +1,4 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import {
-  closeConnectionPool,
-  verifyDatabaseReady,
-} from '@tjsr/mysql-pool-utils';
 import { getSession, useSessionId } from '@tjsr/user-session-middleware';
 
 import { TagtoolSessionData } from './session.js';
@@ -11,6 +7,7 @@ import express from 'express';
 import session from 'express-session';
 import { startApp } from './server.js';
 import supertest from 'supertest';
+import { verifyDatabaseReady } from '@tjsr/mysql-pool-utils';
 
 describe('useSessionId', () => {
   let app: express.Express;
@@ -56,7 +53,7 @@ describe('useSessionId', () => {
           .expect(401, () => {
             done();
           });
-      }),
+      })
   );
 
   test(
@@ -71,22 +68,18 @@ describe('useSessionId', () => {
           .expect(401, () => {
             done();
           });
-      }),
+      })
   );
 
-  test(
-    'Should reject a made-up SessionID that we dont know about in real app- mode B',
-    {},
-    async () => {
-      const response = await supertest(realApp)
-        .get('/')
-        .set('x-session-id', 'abcd-1234')
-        .set('Content-Type', 'application/json');
+  test('Should reject a made-up SessionID that we dont know about in real app- mode B', {}, async () => {
+    const response = await supertest(realApp)
+      .get('/')
+      .set('x-session-id', 'abcd-1234')
+      .set('Content-Type', 'application/json');
 
-      expect(response.status).toBe(401);
-      return Promise.resolve();
-    },
-  );
+    expect(response.status).toBe(401);
+    return Promise.resolve();
+  });
 
   test(
     'Should accept a request with no sessionId',
@@ -99,7 +92,7 @@ describe('useSessionId', () => {
           .expect(200, () => {
             done();
           });
-      }),
+      })
   );
 
   test(
@@ -119,6 +112,6 @@ describe('useSessionId', () => {
           .expect(200, () => {
             done();
           });
-      }),
+      })
   );
 });

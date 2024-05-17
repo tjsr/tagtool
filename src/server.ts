@@ -1,10 +1,4 @@
-import {
-  addTag,
-  deleteTags,
-  getTags,
-  validateHasUserId,
-  validateTags,
-} from './api/tags.js';
+import { addTag, deleteTags, getTags, validateHasUserId, validateTags } from './api/tags.js';
 import { getSession, simpleSessionId } from '@tjsr/user-session-middleware';
 
 import { IPAddress } from './types.js';
@@ -33,7 +27,7 @@ const corsOptions = {
   origin: '*',
 };
 
-export const getIp = (req: express.Request): IPAddress => {
+export const getIp = (req: express.Request): IPAddress | undefined => {
   try {
     if (req.headers.forwarded) {
       const forwardedForHeader: string | undefined = req.headers.forwarded
@@ -47,12 +41,10 @@ export const getIp = (req: express.Request): IPAddress => {
   } catch (err) {
     console.warn("Got part of forwarded header, but couldn't parse it.");
   }
-  return (req as any).clientIp;
+  return (req as express.Request).clientIp;
 };
 
-export const startApp = (
-  sessionStore?: session.MemoryStore,
-): express.Express => {
+export const startApp = (sessionStore?: session.MemoryStore): express.Express => {
   const app: express.Express = express();
   if (process.env['USE_LOGGING'] !== 'false') {
     app.use(morganLog);
@@ -75,7 +67,7 @@ export const startApp = (
   app.use(
     express.urlencoded({
       extended: true,
-    }),
+    })
   );
   app.use(express.json());
 
