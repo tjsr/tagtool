@@ -1,0 +1,38 @@
+ARG NODE_VERSION=20.12.2
+ARG ALPINE_VERSION=3.19
+ARG NPM_VERSION=10.5.2
+FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} as tagtool-dbmigrate
+
+RUN apk add jq
+
+RUN mkdir /opt/tagtool
+COPY package.json /opt/tagtool
+COPY package-lock.json /opt/tagtool
+# COPY prisma /opt/tagtool
+
+WORKDIR /opt/tagtool
+
+RUN PRISMA_VERSION=$(jq -r '.. | objects | select(has("node_modules/prisma")) | ."node_modules/prisma".version' /opt/tagtool/package-lock.json) && \
+  cd /opt && \
+  mkdir prisma && \
+  cd prisma && \
+  npm init --force && \
+  npm install prisma@${PRISMA_VERSION} @prisma/client@${PRISMA_VERSION} @prisma/engines@${PRISMA_VERSION}
+
+# RUN npm install prisma@${PRISMA_VERSION} @prisma/client@${PRISMA_VERSION}
+
+# WORKDIR /opt/tagtool
+# RUN --mount=type=secret,id=github,target=/root/.npm/github_pat \
+#   echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github_pat)" >> /root/.npmrc && \
+#   npm install && \
+#   rm -f /root/.npmrc
+
+# CMD ["npm", "run", "db:upgrade:deploy"]
+
+# FROM gcr.io/distroless/nodejs20-debian12 as tagtool-prisma
+#FROM node:20 as tagtool-prisma
+FROM node:20.12.2-alpine3.19 as tagtool-prisma
+
+WORKDIR /opt/tagtool
+COPY --from=tagtool-dbmigrate /opt/prisma/node_modules /opt/tagtool/node_modules
+#COPY prisma /opt/tagtool

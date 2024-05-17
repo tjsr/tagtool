@@ -1,21 +1,21 @@
-import * as dotenv from 'dotenv-flow';
-
 import { addTag, deleteTags, getTags, validateHasUserId, validateTags } from './api/tags.js';
-import { getSession, simpleSessionId } from './session.js';
+import { getSession, simpleSessionId } from '@tjsr/user-session-middleware';
 
 import { IPAddress } from './types.js';
+import { TagtoolRequest } from './session.js';
 import { session as apiSession } from './api/session.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import { getUser } from './api/user.js';
+import { loadEnv } from '@tjsr/simple-env-utils';
 import { login } from './api/login.js';
 import { logout } from './api/logout.js';
 import morgan from 'morgan';
 import requestIp from 'request-ip';
 import session from 'express-session';
 
-dotenv.config();
+loadEnv();
 
 const morganLog = morgan('common');
 // process.env.PRODUCTION =='true' ? 'common' : 'dev'
@@ -23,25 +23,25 @@ const morganLog = morgan('common');
 const corsOptions = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Expose-Headers': '*',
-  'optionsSuccessStatus': 200,
-  'origin': '*',
+  optionsSuccessStatus: 200,
+  origin: '*',
 };
 
-export const getIp = (req: express.Request): IPAddress => {
+export const getIp = (req: express.Request): IPAddress | undefined => {
   try {
     if (req.headers.forwarded) {
-      const forwardedForHeader: string|undefined = req.headers.forwarded
+      const forwardedForHeader: string | undefined = req.headers.forwarded
         .split(';')
-        .find((header) => header.startsWith('for='));
-      const forParts: string[]|undefined = forwardedForHeader?.split('=');
+        .find((header: string) => header?.startsWith('for='));
+      const forParts: string[] | undefined = forwardedForHeader?.split('=');
       if (forParts !== undefined && forParts.length == 2) {
         return forParts[1];
       }
     }
   } catch (err) {
-    console.warn('Got part of forwarded header, but couldn\'t parse it.');
+    console.warn("Got part of forwarded header, but couldn't parse it.");
   }
-  return (req as any).clientIp;
+  return (req as express.Request).clientIp;
 };
 
 export const startApp = (sessionStore?: session.MemoryStore): express.Express => {
@@ -53,7 +53,7 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   app.use(requestIp.mw());
   app.set('trust proxy', true);
 
-  app.use(function (req, res, next) {
+  app.use((req: TagtoolRequest, res: express.Response, next) => {
     res.header('Access-Control-Expose-Headers', '*');
     next();
   });
@@ -71,7 +71,7 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   );
   app.use(express.json());
 
-  app.use((req, res, next) => {
+  app.use((req: TagtoolRequest, res, next) => {
     res.set('Set-Cookie', `sessionId=${req.session.id}`);
     next();
   });

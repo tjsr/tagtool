@@ -1,9 +1,22 @@
 import { ObjectId, UserId } from '../types.js';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from 'vitest';
+import {
+  closeConnectionPool,
+  verifyDatabaseReady,
+} from '@tjsr/mysql-pool-utils';
 
 import { TagResponse } from './apiTypes.js';
-import { closeConnectionPool } from '@tjsr/mysql-pool-utils';
+import { connectionDetails } from '../setup-tests.js';
 import { createRandomId } from '../utils/createRandomId.js';
 import { createRandomUserId } from '../auth/user.js';
+import { elideValues } from '../utils/elideValues.js';
 import express from 'express';
 import { insertTag } from '../database/insertTag.js';
 import { randomUUID } from 'crypto';
@@ -12,10 +25,25 @@ import { startApp } from '../server.js';
 import supertest from 'supertest';
 
 describe('GET /tags', () => {
-  let app:express.Express;
+  let app: express.Express;
   const generatedUid: UserId = createRandomUserId();
   const generatedObjectId: ObjectId = createRandomId(randomUUID());
-  const generatedTag = 'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
+  const generatedTag =
+    'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
+
+  beforeAll(
+    async () =>
+      new Promise((resolve, fail) => {
+        console.debug('connectionDetails for test run:', JSON.stringify(connectionDetails, elideValues));
+        const dbReadyPromise: Promise<void> = verifyDatabaseReady(connectionDetails);
+        return dbReadyPromise
+          .then(() => resolve())
+          .catch((err) => {
+            console.error('Failed connecting to database.');
+            return fail(err);
+          });
+      })
+  );
 
   beforeAll(async () => {
     await insertTag(generatedUid, generatedObjectId, generatedTag);
@@ -36,18 +64,18 @@ describe('GET /tags', () => {
     return closeConnectionPool();
   });
 
-  test('Should return a 200 error if there\'s no session userInfo.', (done) => {
+  test("Should return a 200 error if there's no session userInfo.", (_done) => {
     supertest(app)
       .get(`/tags/${generatedObjectId}`)
       .expect(200, (err, response) => {
         expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
-        done();
+        return Promise.resolve();
+        // done();
       });
   });
 
-  test('Should return a 200 error if there\'s no session userInfo.', async () => {
-    const response = await supertest(app)
-      .get(`/tags/${generatedObjectId}`);
+  test("Should return a 200 error if there's no session userInfo.", async () => {
+    const response = await supertest(app).get(`/tags/${generatedObjectId}`);
 
     expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
     expect(response.statusCode).toBe(200);
@@ -69,11 +97,11 @@ describe('GET /tags', () => {
     const memoryStore = new session.MemoryStore();
     const testSessionId = 's1234';
     const testObjectId: ObjectId = 'o1234';
-    const ownerUser:UserId = 'u1234';
+    const ownerUser: UserId = 'u1234';
     memoryStore.set(testSessionId, {
       cookie: new session.Cookie(),
     });
-    const app:express.Express = startApp(memoryStore);
+    const app: express.Express = startApp(memoryStore);
 
     await insertTag(ownerUser, testObjectId, 'some-tag');
     await insertTag(ownerUser, testObjectId, 'some-other-tag');
