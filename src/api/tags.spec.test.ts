@@ -64,7 +64,7 @@ describe('GET /tags', () => {
     return closeConnectionPool();
   });
 
-  test("Should return a 200 error if there's no session userInfo.", (_done) => {
+  test('Should return a 200 when retrieving a valid object via callback.', (_done) => {
     supertest(app)
       .get(`/tags/${generatedObjectId}`)
       .expect(200, (err, response) => {
@@ -74,7 +74,7 @@ describe('GET /tags', () => {
       });
   });
 
-  test("Should return a 200 error if there's no session userInfo.", async () => {
+  test('Should return a 200 retrieving a valid object via async method.', async () => {
     const response = await supertest(app).get(`/tags/${generatedObjectId}`);
 
     expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);

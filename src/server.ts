@@ -1,12 +1,17 @@
-import { addTag, deleteTags, getTags, validateHasUserId, validateTags } from './api/tags.js';
-import { getSession, simpleSessionId } from '@tjsr/user-session-middleware';
+import { TagtoolRequest, TagtoolResponse } from './session.js';
+import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
+import express, { NextFunction } from 'express';
+import {
+  handleSessionWithNewlyGeneratedId,
+  requiresSessionId,
+  retrieveSessionData,
+  sessionHandlerMiddleware,
+} from '@tjsr/user-session-middleware';
 
 import { IPAddress } from './types.js';
-import { TagtoolRequest } from './session.js';
 import { session as apiSession } from './api/session.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import express from 'express';
 import { getUser } from './api/user.js';
 import { loadEnv } from '@tjsr/simple-env-utils';
 import { login } from './api/login.js';
@@ -14,8 +19,10 @@ import { logout } from './api/logout.js';
 import morgan from 'morgan';
 import requestIp from 'request-ip';
 import session from 'express-session';
+import { validateHasUserId } from './api/apiMiddlewareUtils.js';
 
 export const DEFAULT_HTTP_PORT = 8242;
+const enableCookies = true;
 
 loadEnv();
 
@@ -29,7 +36,7 @@ const corsOptions = {
   origin: '*',
 };
 
-export const getIp = (req: express.Request): IPAddress | undefined => {
+export const getIp = (req: TagtoolRequest): IPAddress | undefined => {
   try {
     if (req.headers.forwarded) {
       const forwardedForHeader: string | undefined = req.headers.forwarded
@@ -55,14 +62,18 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   app.use(requestIp.mw());
   app.set('trust proxy', true);
 
-  app.use((req: TagtoolRequest, res: express.Response, next) => {
+  app.use((req: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
     res.header('Access-Control-Expose-Headers', '*');
     next();
   });
 
-  app.use(cookieParser());
-  app.use(getSession(sessionStore));
-  app.use(simpleSessionId);
+  if (enableCookies) {
+    // TODO: express-sessio no longer needs cookie parser, so if the app isn't using cookies, eg we're
+    // going to store all user data in a session, we don't need to use cookie-parser.
+    app.use(cookieParser());
+  }
+  app.use(sessionHandlerMiddleware(sessionStore));
+  app.use(requiresSessionId, handleSessionWithNewlyGeneratedId, retrieveSessionData);
 
   // initialisePassportToExpressApp(app);
 
@@ -73,7 +84,7 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   );
   app.use(express.json());
 
-  app.use((req: TagtoolRequest, res, next) => {
+  app.use((req: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
     res.set('Set-Cookie', `sessionId=${req.session.id}`);
     next();
   });
@@ -81,11 +92,19 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   app.get('/session', apiSession);
   app.post('/login', login);
   app.get('/logout', logout);
-  app.get('/tags/:objectId', validateHasUserId, validateTags, getTags);
+  app.get('/tags/:objectId', validateHasUserId, validateTags, validateObjectExists, getTags);
   app.post('/tags/:objectId', validateHasUserId, validateTags, addTag);
-  app.delete('/tags/:objectId', validateHasUserId, validateTags, deleteTags);
+  app.delete('/tags/:objectId', validateHasUserId, validateTags, validateObjectExists, deleteTags);
   app.get('/user', getUser);
   app.get('/user/:userId', getUser);
+
+  app.use((err: Error, req: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
+    console.error(err.stack);
+    if (res.statusCode < 200) {
+      res.status(500);
+    }
+    next();
+  });
 
   app.use(express.static('build'));
 

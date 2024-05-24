@@ -27,5 +27,6 @@ describe('API tests for tags', () => {
       .set('x-session-id', testSessionId);
     expect(response.status).toBe(200);
     expect(response.body.userId).toBe('u1234');
+    return Promise.resolve();
   });
 });

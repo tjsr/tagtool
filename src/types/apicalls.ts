@@ -2,7 +2,7 @@ import { EmailAddress } from '../types.js';
 
 export type RestCallResult = {
   success: boolean;
-  data?: any;
+  data?: unknown;
   status: number;
 };
 

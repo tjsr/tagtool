@@ -1,9 +1,10 @@
 import { ObjectId, Tag, UserId } from '../types.js';
 import { TagResponse, TagResponseElement } from './apiTypes.js';
-import express, { NextFunction } from 'express';
+import { TagtoolRequest, TagtoolResponse } from '../session.js';
 
-import { TagtoolRequest } from '../session.js';
+import { NextFunction } from 'express';
 import { deleteOwnedTag } from '../database/deleteOwnedTag.js';
+import { endWithJsonMessage } from './apiMiddlewareUtils.js';
 import { findTagsByObjectId } from '../database/findTagsByObjectId.js';
 import { getUserId } from '../auth/user.js';
 import { insertTag } from '../database/insertTag.js';
@@ -14,40 +15,9 @@ const checkObjectExists = async (id: ObjectId): Promise<boolean> => {
   return Promise.resolve(id !== undefined);
 };
 
-export const addTag = async (request: TagtoolRequest, res: express.Response, next: NextFunction) => {
+export const addTag = async (request: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
   const userId: UserId = getUserId(request);
-  if (userId === undefined) {
-    res.status(401);
-    res.contentType('application/json');
-    res.send({
-      message: 'Invalid user',
-    });
-    res.end();
-    return;
-  }
-
-  const objectId: ObjectId|undefined = request.params.objectId;
-  if (!objectId || !validateObjectId(objectId)) {
-    res.status(400);
-    res.contentType('application/json');
-    res.send({
-      message: 'Invalid objectId',
-    });
-    res.end();
-    return;
-  }
-
-  const objectExists = await checkObjectExists(objectId);
-  if (!objectExists) {
-    res.status(404);
-    res.contentType('application/json');
-    res.send({
-      message: 'Invalid object',
-      objectId: objectId,
-    });
-    res.end();
-    return;
-  }
+  const objectId: ObjectId | undefined = request.params.objectId;
 
   const tag = request.body.tag;
   if (!tag || !validateTag(tag)) {
@@ -68,20 +38,18 @@ export const addTag = async (request: TagtoolRequest, res: express.Response, nex
   next();
 };
 
-const tagsToTagResponse = (tags: Tag[], userId: UserId|undefined): TagResponse => {
+const tagsToTagResponse = (tags: Tag[], userId: UserId | undefined): TagResponse => {
   if (tags === undefined || tags.length === 0) {
     throw new Error('Tags must be defined and not empty');
   }
   const objectId: ObjectId = tags[0].objectId;
-  
-  if (
-    tags.filter((current: Tag) => current.objectId === undefined).length !== 0
-  ) {
+
+  if (tags.filter((current: Tag) => current.objectId === undefined).length !== 0) {
     throw new Error('objectId must be defined on each returned tag');
   }
   const responseTags: TagResponseElement[] = [];
   tags.forEach((t) => {
-    const foundTag:TagResponseElement|undefined = responseTags.find((ft) => ft.tag === t.tag);
+    const foundTag: TagResponseElement | undefined = responseTags.find((ft) => ft.tag === t.tag);
     if (foundTag === undefined) {
       const tag: TagResponseElement = {
         count: 1,
@@ -103,76 +71,57 @@ const tagsToTagResponse = (tags: Tag[], userId: UserId|undefined): TagResponse =
   return response;
 };
 
-export const validateHasUserId = async (
-  request: TagtoolRequest,
-  res: express.Response,
-  next: NextFunction
-): Promise<void> => {
-  let userId: UserId|undefined = undefined;
-  try {
-    userId = getUserId(request);
-  } catch (error) {
-    console.warn('Got an exception when getting userId data', error);
-    return endWithJsonMessage(res, 500, 'Invalid user');
-  }
-  if (userId === undefined) {
-    return endWithJsonMessage(res, 401, 'Invalid user');
-  }
-  next();
-  return;
-};
-
-const endWithJsonMessage = async (
-  res: express.Response,
-  status: number,
-  message: string,
-  next?: NextFunction
-): Promise<void> => {
-  res.status(status);
-  res.contentType('application/json');
-  res.send({
-    message,
-  });
-  res.end();
-  if (next) {
-    next();
-  }
-  return Promise.reject(new Error(message));
-};
-
 export const validateTags = async (
   request: TagtoolRequest,
-  res: express.Response,
+  res: TagtoolResponse,
   next: NextFunction
 ): Promise<void> => {
-  const objectId: ObjectId|undefined = request.params.objectId;
+  const objectId: ObjectId | undefined = request.params.objectId;
   if (!objectId) {
     return endWithJsonMessage(res, 400, 'No objectId provided');
   }
   if (!validateObjectId(objectId)) {
     return endWithJsonMessage(res, 400, `Invalid objectId ${objectId}`);
   }
+  console.debug('Got valid tags.');
   next();
   return Promise.resolve();
 };
 
-export const getTags = async (request: TagtoolRequest, res: express.Response, next: NextFunction): Promise<void> => {
-  const userId: UserId|undefined = getUserId(request);
+export const validateObjectExists = async (
+  request: TagtoolRequest,
+  res: TagtoolResponse,
+  next: NextFunction
+): Promise<void> => {
+  const objectId: ObjectId | undefined = request.params.objectId;
+  const objectExists = await checkObjectExists(objectId);
+  if (!objectExists) {
+    return endWithJsonMessage(res, 404, 'Object not found', undefined, { objectId });
+  }
 
-  const objectId: ObjectId|undefined = request.params.objectId;
+  console.debug('Object exists.');
+  next();
+  return Promise.resolve();
+};
+
+export const getTags = async (request: TagtoolRequest, res: TagtoolResponse, next: NextFunction): Promise<void> => {
+  const userId: UserId | undefined = getUserId(request);
+
+  const objectId: ObjectId | undefined = request.params.objectId;
 
   try {
     const tags: Tag[] = await findTagsByObjectId(objectId);
     if (tags === undefined) {
-      return endWithJsonMessage(res, 404, 'No tag result returned');
+      return endWithJsonMessage(res, 404, 'No tag result returned.');
     } else if (tags.length == 0) {
-      return endWithJsonMessage(res, 404, 'No tag result returned');
+      return endWithJsonMessage(res, 404, 'Empty tag result list returned.');
     } else {
       res.contentType('application/json');
       const response: TagResponse = tagsToTagResponse(tags, userId);
       res.status(200);
       res.send(response);
       next();
+      return Promise.resolve();
     }
   } catch (err) {
     console.warn('Error retrieving tags', err);
@@ -180,7 +129,7 @@ export const getTags = async (request: TagtoolRequest, res: express.Response, ne
   }
 };
 
-export const deleteTags = async (request: TagtoolRequest, res: express.Response, next: NextFunction) => {
+export const deleteTags = async (request: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
   const userId: UserId = getUserId(request);
   if (userId === undefined) {
     return endWithJsonMessage(res, 401, 'Invalid user');
@@ -201,7 +150,7 @@ export const deleteTags = async (request: TagtoolRequest, res: express.Response,
     return endWithJsonMessage(res, 400, 'Invalid tag');
   }
 
-  const objectId: ObjectId|undefined = request.params.objectId;
+  const objectId: ObjectId | undefined = request.params.objectId;
 
   const tags: string[] = request.body.tags;
   let tagsDeleted = 0;
@@ -215,10 +164,9 @@ export const deleteTags = async (request: TagtoolRequest, res: express.Response,
     res.end();
   } else {
     res.status(200);
+    res.send({
+      delted: tagsDeleted,
+    });
     next();
   }
-
-  res.send({
-    delted: tagsDeleted,
-  });
 };

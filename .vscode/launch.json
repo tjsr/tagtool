@@ -1,0 +1,17 @@
+{
+  "configurations": [
+  {
+    "name": "Attach to server",
+    "port": 8999,
+    "request": "attach",
+    "skipFiles": [
+      "<node_internals>/**"
+    ],
+    "type": "node",
+    "outFiles": [
+      "${workspaceFolder}/dist/**/*.(m|c|)js",
+      "!**/node_modules/**"
+    ]
+  }
+  ]
+}
