@@ -1,12 +1,7 @@
+import { SessionHandlerError, sessionHandlerMiddleware, userSessionMiddleware } from '@tjsr/user-session-middleware';
 import { TagtoolRequest, TagtoolResponse } from './session.js';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
 import express, { NextFunction } from 'express';
-import {
-  handleSessionWithNewlyGeneratedId,
-  requiresSessionId,
-  retrieveSessionData,
-  sessionHandlerMiddleware,
-} from '@tjsr/user-session-middleware';
 
 import { IPAddress } from './types.js';
 import { session as apiSession } from './api/session.js';
@@ -68,12 +63,13 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   });
 
   if (enableCookies) {
-    // TODO: express-sessio no longer needs cookie parser, so if the app isn't using cookies, eg we're
+    // TODO: express-session no longer needs cookie parser, so if the app isn't using cookies, eg we're
     // going to store all user data in a session, we don't need to use cookie-parser.
     app.use(cookieParser());
   }
   app.use(sessionHandlerMiddleware(sessionStore));
-  app.use(requiresSessionId, handleSessionWithNewlyGeneratedId, retrieveSessionData);
+  // app.use(requiresSessionId, handleSessionWithNewlyGeneratedId, retrieveSessionData, setSessionCookie);
+  app.use(userSessionMiddleware);
 
   // initialisePassportToExpressApp(app);
 
@@ -84,11 +80,6 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   );
   app.use(express.json());
 
-  app.use((req: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
-    res.set('Set-Cookie', `sessionId=${req.session.id}`);
-    next();
-  });
-
   app.get('/session', apiSession);
   app.post('/login', login);
   app.get('/logout', logout);
@@ -98,12 +89,27 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   app.get('/user', getUser);
   app.get('/user/:userId', getUser);
 
-  app.use((err: Error, req: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
-    console.error(err.stack);
-    if (res.statusCode < 200) {
+  app.get('/', (req: TagtoolRequest, res: TagtoolResponse) => {
+    res.send({});
+    res.end();
+  });
+
+  app.use((err: Error, req: TagtoolRequest, res: TagtoolResponse, next: NextFunction): void => {
+    if (SessionHandlerError.isType(err)) {
+      const sessionError: SessionHandlerError = err as SessionHandlerError;
+      console.error('errorHandler', res.statusCode, sessionError.status, sessionError, sessionError.stack);
+      res.status(sessionError.status);
+      res.json({ message: sessionError.message });
+    } else if (res.statusCode <= 200) {
+      console.error('errorHandler', res.statusCode, err, err.stack, 'No status code set on response, setting to 500.');
       res.status(500);
+    } else {
+      console.error(err, err.stack);
     }
-    next();
+    // res.send();
+    // res.end();
+
+    next(err);
   });
 
   app.use(express.static('build'));

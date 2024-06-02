@@ -24,6 +24,7 @@ export const getUserId = (request: TagtoolRequest): UserId => {
   } else {
     request.session.userId = createRandomUserId();
     request.session.save();
+    console.trace(getUserId, 'Returning user id', request.session.userId);
     return request.session.userId;
   }
 };

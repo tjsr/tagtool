@@ -78,7 +78,7 @@ describe('GET /tags', () => {
     const response = await supertest(app).get(`/tags/${generatedObjectId}`);
 
     expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
-    expect(response.statusCode).toBe(200);
+    expect(response.status).toBe(200);
     return Promise.resolve();
   });
 
@@ -88,7 +88,7 @@ describe('GET /tags', () => {
       .set('x-session-id', 'abcd-1234')
       .set('Content-Type', 'application/json');
 
-    expect(response.statusCode).toBe(401);
+    expect(response.status).toBe(401);
     expect(response.body.data).toBeUndefined();
     return Promise.resolve();
   });

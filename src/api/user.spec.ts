@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 
+import { SESSION_ID_HEADER } from './apiUtils.js';
 import { TagtoolSessionData } from '../session.js';
 import express from 'express';
 import session from 'express-session';
@@ -22,9 +23,7 @@ describe('API tests for tags', () => {
   });
 
   test('GET /user with sessionId', async () => {
-    const response = await supertest(app)
-      .get('/user/123')
-      .set('x-session-id', testSessionId);
+    const response = await supertest(app).get('/user/123').set(SESSION_ID_HEADER, testSessionId);
     expect(response.status).toBe(200);
     expect(response.body.userId).toBe('u1234');
     return Promise.resolve();

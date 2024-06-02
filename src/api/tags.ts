@@ -83,7 +83,7 @@ export const validateTags = async (
   if (!validateObjectId(objectId)) {
     return endWithJsonMessage(res, 400, `Invalid objectId ${objectId}`);
   }
-  console.debug('Got valid tags.');
+  console.debug(validateTags, 'Got valid tags.');
   next();
   return Promise.resolve();
 };
@@ -99,7 +99,7 @@ export const validateObjectExists = async (
     return endWithJsonMessage(res, 404, 'Object not found', undefined, { objectId });
   }
 
-  console.debug('Object exists.');
+  console.debug(validateObjectExists, 'Object exists.');
   next();
   return Promise.resolve();
 };

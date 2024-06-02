@@ -48,7 +48,7 @@ export const validateHasUserId = async <
   if (userId === undefined) {
     return endWithJsonMessage(res, 401, 'Invalid user');
   }
-  console.debug('Got valid userId', userId);
+  console.debug(validateHasUserId, 'Got valid userId', userId);
   next();
   return;
 };

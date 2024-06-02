@@ -57,7 +57,7 @@ export const login = async (req: TagtoolRequest, res: express.Response) => {
     res.send(result);
   } catch (e) {
     res.status(500);
-    console.warn(e);
+    console.trace(e);
     res.send();
   } finally {
     res.end();
