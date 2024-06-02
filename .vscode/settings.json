@@ -4,5 +4,7 @@
   "eslint.experimental.useFlatConfig": true,
   "eslint.options": {
     "overrideConfigFile": "eslint.config.mjs"
-  }
+  },
+  "prettier.requireConfig": true,
+  "prettier.printWidth": 120
 }
