@@ -44,7 +44,6 @@ describe('retrieveSessionData', () => {
   });
 
   test('Should not hang when no session ID header is sent', async () => {
-    console.log('Starting test...');
     const response = await supertest(realApp).get('/').set('Content-Type', 'application/json').expect(200);
 
     expect(response.status).toBe(200);

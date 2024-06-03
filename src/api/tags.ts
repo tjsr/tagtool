@@ -83,7 +83,7 @@ export const validateTags = async (
   if (!validateObjectId(objectId)) {
     return endWithJsonMessage(res, 400, `Invalid objectId ${objectId}`);
   }
-  console.debug(validateTags, 'Got valid tags.');
+  console.debug(validateTags, `Got valid tags for objectId ${objectId}`);
   next();
   return Promise.resolve();
 };
