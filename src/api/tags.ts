@@ -99,7 +99,7 @@ export const validateObjectExists = async (
     return endWithJsonMessage(res, 404, 'Object not found', undefined, { objectId });
   }
 
-  console.debug(validateObjectExists, 'Object exists.');
+  console.debug(validateObjectExists, `Object ${objectId} exists.`);
   next();
   return Promise.resolve();
 };
