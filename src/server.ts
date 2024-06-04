@@ -1,4 +1,4 @@
-import { SessionHandlerError, sessionHandlerMiddleware, userSessionMiddleware } from '@tjsr/user-session-middleware';
+import { SessionHandlerError, userSessionMiddleware } from '@tjsr/user-session-middleware';
 import { TagtoolRequest, TagtoolResponse } from './session.js';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
 import express, { NextFunction } from 'express';
@@ -67,9 +67,12 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
     // going to store all user data in a session, we don't need to use cookie-parser.
     app.use(cookieParser());
   }
-  app.use(sessionHandlerMiddleware(sessionStore));
-  // app.use(requiresSessionId, handleSessionWithNewlyGeneratedId, retrieveSessionData, setSessionCookie);
-  app.use(userSessionMiddleware);
+  app.use(
+    userSessionMiddleware({
+      skipExposeHeaders: false,
+      store: sessionStore,
+    })
+  );
 
   // initialisePassportToExpressApp(app);
 
