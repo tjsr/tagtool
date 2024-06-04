@@ -18,7 +18,6 @@ export interface TagtoolSessionData extends SystemSessionDataType {
 }
 
 export interface TagtoolRequest extends SystemHttpRequestType<TagtoolSessionData> {
-  newSessionIdGenerated?: boolean;
   session: Session & Partial<TagtoolSessionData>;
 }
 
