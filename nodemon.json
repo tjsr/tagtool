@@ -4,8 +4,12 @@
   "execMap": {
     "ts": "ts-node"
   },
-  "ignore": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+  "ignore": ["src/**/*.spec.ts", "src/**/*.test.ts", "vite.config.ts.timestamp-*", "docker-compose.yml"],
   "ext": "ts",
-  "watch": ["src", "nodemon.json", "./*.ts"],
-  "verbose": true
+  "watch": ["src", "nodemon.json", "package.json", "./*.ts", ".env.local"],
+  "verbose": true,
+  "env": {
+    "NODE_ENV": "development",
+    "DOTENV_FLOW_PATTERN": ".env.test"
+  }
 }

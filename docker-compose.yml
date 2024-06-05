@@ -9,15 +9,14 @@ services:
         ARG MYSQL_VERSION 5.7
         FROM mysql:${MYSQL_VERSION:-5.7} as mysql
 
-        #COPY resources/*.sql /docker-entrypoint-initdb.d/
+        RUN yum install -y -q gettext
+
+        COPY scripts/api-db-users.sh /docker-entrypoint-initdb.d/010-api-db-users.sh
+        COPY scripts/privs.api.template /docker-entrypoint-initdb.d/privs.api.template
+        COPY scripts/030-sqlmode.sql /docker-entrypoint-initdb.d/030-sqlmode.sql
+        COPY scripts/my.cnf /etc/mysql/my.cnf
     env_file:
     - ./.env.test
-    # environment:
-    #   MYSQL_ROOT_PASSWORD: cirootpassword
-    #   MYSQL_DATABASE: tagtool_ci
-    #   MYSQL_USER: ciuser
-    #   MYSQL_PASSWORD: cipassword
-    #   MYSQL_HOST: '127.0.0.1'
     ports:
     - "${MYSQL_CI_HOST_PORT:-23407}:3306"
     command: --default-authentication-plugin=mysql_native_password
@@ -30,9 +29,9 @@ services:
     container_name: tagtool_dbmigration
     build:
       args:
-        NODE_VERSION: 20.13.1
-        ALPINE_VERSION: 3.19
-        NPM_VERSION: 10.8.0
+        NODE_VERSION: '20.14.0'
+        ALPINE_VERSION: '3.20'
+        NPM_VERSION: '10.8.1'
       context: .
       dockerfile: Dockerfile.dbmigrate
       secrets:
@@ -46,7 +45,6 @@ services:
     depends_on:
       mysqldb:
         condition: service_healthy
-
 
 secrets:
   github:
