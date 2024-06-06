@@ -10,6 +10,6 @@
   "verbose": true,
   "env": {
     "NODE_ENV": "development",
-    "DOTENV_FLOW_PATTERN": ".env.test"
+    "DOTENV_FLOW_PATTERN": ".env.test[.local]"
   }
 }

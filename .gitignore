@@ -6,3 +6,6 @@ container.bat
 build/
 dist/
 dbcreate.sql
+.env*.local
+*_GITHUB_PAT
+vitest.workspace.js
