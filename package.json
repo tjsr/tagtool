@@ -8,8 +8,8 @@
   "homepage": "./",
   "type": "module",
   "scripts": {
-    "clean": "rimraf dist build",
-    "clean:all": "npm run clean && rimraf node_modules",
+    "clean": "npx rimraf dist build",
+    "clean:all": "npm run clean && npx rimraf node_modules",
     "test": "vitest --run && npm run lint",
     "start:frontend": "cross-env GENERATE_SOURCEMAP=true PORT=3008 vite dev",
     "start:dev": "nodemon index.ts && cross-env PORT=3008 vite dev",
@@ -75,6 +75,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/express-mysql-session": "^3.0.6",
+    "@types/express-session": "^1.18.0",
     "@types/morgan": "^1.9.9",
     "@types/mysql": "^2.15.26",
     "@types/node": "^20.14.2",
