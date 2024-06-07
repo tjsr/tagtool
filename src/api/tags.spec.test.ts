@@ -122,15 +122,21 @@ describe('GET /tags', () => {
 describe('POST /tags/:objectId', () => {
   test.todo('Return a 401 creating a tag without a session ID when mode is enabled.', async () => {});
 
-  test.todo('Return a 200 creating a tag without a session ID when mode is permitted.', async () => {});
+  test.todo('Return a 201 creating a tag without a session ID when mode is permitted.', async () => {});
 
-  test.todo('Return a 200 creating a tag with a valid session but anonymous user where permitted.', async () => {});
+  test.todo('Return a 201 creating a tag with a valid session but anonymous user where permitted.', async () => {});
 
   test.todo('Return a 403 creating a tag with a valid session but anonymous user where disallowed.', async () => {});
 
-  test.todo('Return a 200 creating a tag with a logged in user.', async () => {});
+  test.todo('Return a 201 creating a tag with a logged in user.', async () => {});
 
   test.todo('Return a 302 creating a tag for a user that already exists.', async () => {});
 
-  test.todo('Return a 200 creating an already existing tag that was created by other users.', async () => {});
+  test.todo('Return a 202 creating an already existing tag that was created by other users.', async () => {});
+
+  test.todo('Return a 409 attempting to create existing tag for that user.', async () => {});
+
+  test.todo('Return a 404 attempting to create a tag for an object that can not be created.', async () => {});
+
+  test.todo('Return a 201 attempting to create a tag for an object that does not exist.', async () => {});
 });
