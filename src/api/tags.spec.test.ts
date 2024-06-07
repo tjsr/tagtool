@@ -28,8 +28,7 @@ describe('GET /tags', () => {
   let app: express.Express;
   const generatedUid: UserId = createRandomUserId();
   const generatedObjectId: ObjectId = createRandomId(randomUUID());
-  const generatedTag =
-    'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
+  const generatedTag = 'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
 
   beforeAll(
     async () =>
@@ -64,7 +63,7 @@ describe('GET /tags', () => {
     return closeConnectionPool();
   });
 
-  test('Should return a 200 when retrieving a valid object via callback.', (_done) => {
+  test('Should return a 200 when retrieving a tag list for a valid object via callback.', (_done) => {
     supertest(app)
       .get(`/tags/${generatedObjectId}`)
       .expect(200, (err, response) => {
@@ -74,7 +73,7 @@ describe('GET /tags', () => {
       });
   });
 
-  test('Should return a 200 retrieving a valid object via async method.', async () => {
+  test('Should return a 200 retrieving a tag list for a valid object via async method.', async () => {
     const response = await supertest(app).get(`/tags/${generatedObjectId}`);
 
     expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
@@ -105,9 +104,7 @@ describe('GET /tags', () => {
 
     await insertTag(ownerUser, testObjectId, 'some-tag');
     await insertTag(ownerUser, testObjectId, 'some-other-tag');
-    const response = await supertest(app)
-      .get(`/tags/${testObjectId}`)
-      .set('Content-Type', 'application/json');
+    const response = await supertest(app).get(`/tags/${testObjectId}`).set('Content-Type', 'application/json');
 
     expect(response.statusCode).toBe(200);
     expect(response.headers['content-type'].match(/json/)).toBeTruthy();
@@ -116,4 +113,24 @@ describe('GET /tags', () => {
     expect(responseBody.tags.length).toBe(2);
     return Promise.resolve();
   });
+
+  test.todo('Should return a 200 and a count of each tag where permitted', () => {});
+
+  test.todo('Should return a 200 but no item counts where limited read permitted', () => {});
+});
+
+describe('POST /tags/:objectId', () => {
+  test.todo('Return a 401 creating a tag without a session ID when mode is enabled.', async () => {});
+
+  test.todo('Return a 200 creating a tag without a session ID when mode is permitted.', async () => {});
+
+  test.todo('Return a 200 creating a tag with a valid session but anonymous user where permitted.', async () => {});
+
+  test.todo('Return a 403 creating a tag with a valid session but anonymous user where disallowed.', async () => {});
+
+  test.todo('Return a 200 creating a tag with a logged in user.', async () => {});
+
+  test.todo('Return a 302 creating a tag for a user that already exists.', async () => {});
+
+  test.todo('Return a 200 creating an already existing tag that was created by other users.', async () => {});
 });
