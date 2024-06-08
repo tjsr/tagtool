@@ -6,7 +6,8 @@
     "overrideConfigFile": "eslint.config.mjs"
   },
   "prettier.requireConfig": true,
-  "prettier.printWidth": 120,
   "javascript.preferences.importModuleSpecifierEnding": "js",
-  "typescript.preferences.importModuleSpecifierEnding": "js"
+  "typescript.preferences.importModuleSpecifierEnding": "js",
+  "prettier.configPath": ".prettierrc.json",
+  "editor.rulers": [120]
 }
