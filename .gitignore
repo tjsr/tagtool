@@ -1,11 +1,16 @@
 src/generated
 coverage
 node_modules
-.env
 container.bat
 build/
 dist/
 dbcreate.sql
-.env*.local
 *_GITHUB_PAT
 vitest.workspace.js
+
+# Various system env files - permit test and dev, but exclude .local, production and staging configs
+.env.*
+!.env.dev
+!.env.development
+!.env.test
+.env.*.local
