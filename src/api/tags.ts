@@ -3,10 +3,11 @@ import { TagResponse, TagResponseElement } from './apiTypes.js';
 import { TagtoolRequest, TagtoolResponse } from '../session.js';
 
 import { NextFunction } from 'express';
+import assert from 'node:assert';
 import { deleteOwnedTag } from '../database/deleteOwnedTag.js';
 import { endWithJsonMessage } from './apiMiddlewareUtils.js';
 import { findTagsByObjectId } from '../database/findTagsByObjectId.js';
-import { getUserId } from '../auth/user.js';
+import { getUserId } from '../../../user-session-middleware/src/auth/user.js';
 import { insertTag } from '../database/insertTag.js';
 import { validateObjectId } from '../utils/validateObjectId.js';
 import { validateTag } from '../utils/validateTag.js';
@@ -17,7 +18,11 @@ const checkObjectExists = async (id: ObjectId): Promise<boolean> => {
 
 export const addTag = async (request: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
   const userId: UserId = getUserId(request);
-  const objectId: ObjectId | undefined = request.params.objectId;
+  assert(request.params, 'Request params must be defined');
+  assert(request.params.objectId, 'Request params.objectId must be defined');
+  const objectId: ObjectId = request.params.objectId;
+
+  assert(request.body, 'Request body must be defined');
 
   const tag = request.body.tag;
   if (!tag || !validateTag(tag)) {
@@ -38,7 +43,7 @@ export const addTag = async (request: TagtoolRequest, res: TagtoolResponse, next
   next();
 };
 
-const tagsToTagResponse = (tags: Tag[], userId: UserId | undefined): TagResponse => {
+const tagsToTagResponse = (tags: Tag[], userId: UserId | undefined, reportTagCounts = true): TagResponse => {
   if (tags === undefined || tags.length === 0) {
     throw new Error('Tags must be defined and not empty');
   }
@@ -52,13 +57,17 @@ const tagsToTagResponse = (tags: Tag[], userId: UserId | undefined): TagResponse
     const foundTag: TagResponseElement | undefined = responseTags.find((ft) => ft.tag === t.tag);
     if (foundTag === undefined) {
       const tag: TagResponseElement = {
-        count: 1,
         isOwner: t.createdByUserId == userId,
         tag: t.tag,
-      };
+      } as TagResponseElement;
+      if (reportTagCounts) {
+        tag.count = 1;
+      }
       responseTags.push(tag);
     } else {
-      foundTag.count = foundTag.count + 1;
+      if (reportTagCounts) {
+        foundTag.count = (foundTag.count || 0) + 1;
+      }
       if (t.createdByUserId == userId) {
         foundTag.isOwner = true;
       }
@@ -73,15 +82,15 @@ const tagsToTagResponse = (tags: Tag[], userId: UserId | undefined): TagResponse
 
 export const validateTags = async (
   request: TagtoolRequest,
-  res: TagtoolResponse,
+  response: TagtoolResponse,
   next: NextFunction
 ): Promise<void> => {
   const objectId: ObjectId | undefined = request.params.objectId;
   if (!objectId) {
-    return endWithJsonMessage(res, 400, 'No objectId provided');
+    return endWithJsonMessage(response, 400, 'No objectId provided');
   }
   if (!validateObjectId(objectId)) {
-    return endWithJsonMessage(res, 400, `Invalid objectId ${objectId}`);
+    return endWithJsonMessage(response, 400, `Invalid objectId ${objectId}`);
   }
   console.debug(validateTags, `Got valid tags for objectId ${objectId}`);
   next();
@@ -117,7 +126,7 @@ export const getTags = async (request: TagtoolRequest, res: TagtoolResponse, nex
       return endWithJsonMessage(res, 404, 'Empty tag result list returned.');
     } else {
       res.contentType('application/json');
-      const response: TagResponse = tagsToTagResponse(tags, userId);
+      const response: TagResponse = tagsToTagResponse(tags, userId, request.reportTagCounts);
       res.status(200);
       res.send(response);
       next();

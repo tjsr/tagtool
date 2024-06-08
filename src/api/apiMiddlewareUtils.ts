@@ -2,7 +2,7 @@ import { SystemHttpRequestType, SystemSessionDataType } from '@tjsr/user-session
 import express, { NextFunction } from 'express';
 
 import { UserId } from '../types.js';
-import { getUserId } from '../auth/user.js';
+import { getUserId } from '../../../user-session-middleware/src/auth/user.js';
 
 export const endWithJsonMessage = async <ResponseType extends express.Response>(
   res: ResponseType,

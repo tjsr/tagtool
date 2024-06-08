@@ -14,7 +14,7 @@ requireEnv('HTTP_PORT');
 
 const HTTP_PORT: number = intEnv('HTTP_PORT', DEFAULT_HTTP_PORT);
 
-const app: express.Express = startApp(mysqlSessionStore);
+const app: express.Express = startApp({ sessionStore: mysqlSessionStore });
 app.listen(HTTP_PORT, () => {
   console.log(`Listening on port ${HTTP_PORT}`);
 });

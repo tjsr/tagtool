@@ -1,3 +1,5 @@
+import session from 'express-session';
+
 export type EmailAddress = string;
 export type uuid = string;
 export type uuid5 = uuid;
@@ -9,7 +11,12 @@ export type ISO8601Date = Date;
 export type ObjectId = string;
 
 export interface Tag {
-  createdByUserId: UserId,
-  objectId: ObjectId,
-  tag: string
+  createdByUserId: UserId;
+  objectId: ObjectId;
+  tag: string;
+}
+
+export interface TagtoolConfig {
+  enableTagCount?: boolean;
+  sessionStore?: session.Store;
 }

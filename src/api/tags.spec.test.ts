@@ -1,21 +1,14 @@
 import { ObjectId, UserId } from '../types.js';
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from 'vitest';
-import {
-  closeConnectionPool,
-  verifyDatabaseReady,
-} from '@tjsr/mysql-pool-utils';
+import { TaskContext, afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import { closeConnectionPool, verifyDatabaseReady } from '@tjsr/mysql-pool-utils';
+import { createTestObjectId, createTestSessionId, createTestUserId } from '../testUtils.js';
 
+import { SESSION_ID_HEADER } from './apiUtils.js';
+import { SystemSessionDataType } from '@tjsr/user-session-middleware';
 import { TagResponse } from './apiTypes.js';
 import { connectionDetails } from '../setup-tests.js';
-import { createRandomId } from '../utils/createRandomId.js';
-import { createRandomUserId } from '../auth/user.js';
+import { createRandomId } from '../../../user-session-middleware/src/utils/createRandomId.js';
+import { createRandomUserId } from '../../../user-session-middleware/src/auth/user.js';
 import { elideValues } from '../utils/elideValues.js';
 import express from 'express';
 import { insertTag } from '../database/insertTag.js';
@@ -24,12 +17,15 @@ import session from 'express-session';
 import { startApp } from '../server.js';
 import supertest from 'supertest';
 
-describe('GET /tags', () => {
-  let app: express.Express;
-  const generatedUid: UserId = createRandomUserId();
-  const generatedObjectId: ObjectId = createRandomId(randomUUID());
-  const generatedTag = 'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
+type TagTestContext = TaskContext & {
+  app: express.Express;
+  generatedObjectId: ObjectId;
+  generatedTag: string;
+  generatedUid: UserId;
+  memoryStore: session.MemoryStore;
+};
 
+describe('GET /tags', () => {
   beforeAll(
     async () =>
       new Promise((resolve, fail) => {
@@ -44,18 +40,19 @@ describe('GET /tags', () => {
       })
   );
 
-  beforeAll(async () => {
-    await insertTag(generatedUid, generatedObjectId, generatedTag);
-    return Promise.resolve();
-  });
+  beforeEach(async (context: TagTestContext) => {
+    context.generatedUid = createRandomUserId();
+    context.generatedObjectId = createRandomId(randomUUID());
+    context.generatedTag = 'some-tag-' + createRandomId(randomUUID()).substring(0, 7);
+    context.memoryStore = new session.MemoryStore();
 
-  beforeEach(async () => {
-    const memoryStore = new session.MemoryStore();
+    await insertTag(context.generatedUid, context.generatedObjectId, context.generatedTag);
+
     const testSessionId = 's1234';
-    memoryStore.set(testSessionId, {
+    context.memoryStore.set(testSessionId, {
       cookie: new session.Cookie(),
     });
-    app = startApp(memoryStore);
+    context.app = startApp({ sessionStore: context.memoryStore });
     return Promise.resolve();
   });
 
@@ -63,17 +60,29 @@ describe('GET /tags', () => {
     return closeConnectionPool();
   });
 
-  test('Should return a 200 when retrieving a tag list for a valid object via callback.', (_done) => {
-    supertest(app)
-      .get(`/tags/${generatedObjectId}`)
-      .expect(200, (err, response) => {
-        expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
-        return Promise.resolve();
-        // done();
-      });
+  test<TagTestContext>('Should return a 200 when retrieving a tag list for a valid object via callback.', async ({
+    app,
+    generatedObjectId,
+  }) => {
+    return new Promise<void>((resolve, reject) => {
+      supertest(app)
+        .get(`/tags/${generatedObjectId}`)
+        .expect(200, (err, response) => {
+          try {
+            expect(err).toBeNull();
+            expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
+          } catch (e) {
+            reject(e);
+          }
+          resolve();
+        });
+    });
   });
 
-  test('Should return a 200 retrieving a tag list for a valid object via async method.', async () => {
+  test<TagTestContext>('Should return a 200 retrieving a tag list for a valid object via async method.', async ({
+    app,
+    generatedObjectId,
+  }) => {
     const response = await supertest(app).get(`/tags/${generatedObjectId}`);
 
     expect(response.body.message).not.toBe(`Invalid objectId ${generatedObjectId}`);
@@ -81,10 +90,15 @@ describe('GET /tags', () => {
     return Promise.resolve();
   });
 
-  test('Should reject a made-up SessionID that we dont know about', async () => {
+  test<TagTestContext>('Should reject a made-up SessionID that we dont know about', async ({
+    app,
+    generatedObjectId,
+    task,
+  }) => {
+    const testSessionId = createTestSessionId(task.name);
     const response = await supertest(app)
       .get(`/tags/${generatedObjectId}`)
-      .set('x-session-id', 'abcd-1234')
+      .set(SESSION_ID_HEADER, testSessionId)
       .set('Content-Type', 'application/json');
 
     expect(response.status).toBe(401);
@@ -92,15 +106,17 @@ describe('GET /tags', () => {
     return Promise.resolve();
   });
 
-  test('Should return a 200 if there is no authenticated user for the session.', async () => {
-    const memoryStore = new session.MemoryStore();
-    const testSessionId = 's1234';
-    const testObjectId: ObjectId = 'o1234';
-    const ownerUser: UserId = 'u1234';
+  test<TagTestContext>('Should return a 200 if there is no authenticated user for the session.', async ({
+    app,
+    memoryStore,
+    task,
+  }) => {
+    const testSessionId = createTestSessionId(task.name);
+    const testObjectId: ObjectId = createTestObjectId(task.name);
+    const ownerUser: UserId = createTestUserId(task.name);
     memoryStore.set(testSessionId, {
       cookie: new session.Cookie(),
     });
-    const app: express.Express = startApp(memoryStore);
 
     await insertTag(ownerUser, testObjectId, 'some-tag');
     await insertTag(ownerUser, testObjectId, 'some-other-tag');
@@ -114,29 +130,171 @@ describe('GET /tags', () => {
     return Promise.resolve();
   });
 
-  test.todo('Should return a 200 and a count of each tag where permitted', () => {});
+  test<TagTestContext>('Should return a 200 and a count of each tag where permitted', async ({
+    app,
+    memoryStore,
+    task,
+  }) => {
+    const testSessionId = createTestSessionId(task.name);
+    const testObjectId: ObjectId = createTestObjectId(task.name);
 
-  test.todo('Should return a 200 but no item counts where limited read permitted', () => {});
+    const promises: Promise<void>[] = [];
+    const testOwners: UserId[] = [1, 2, 3, 4].map((i) => createTestUserId(task.name + '-' + i));
+    testOwners.forEach(async (ownerUser: UserId, index: number) => {
+      if (index < 1) {
+        console.log(`Added ${index + 1} as some-tag-1`);
+        promises.push(insertTag(ownerUser, testObjectId, 'some-tag-1'));
+      }
+      if (index < 2) {
+        console.log(`Added ${index + 1} as some-tag-2`);
+        promises.push(insertTag(ownerUser, testObjectId, 'some-tag-2'));
+      }
+      if (index < 3) {
+        console.log(`Added ${index + 1} as some-tag-3`);
+        promises.push(insertTag(ownerUser, testObjectId, 'some-tag-3'));
+      }
+      if (index < 4) {
+        console.log(`Added ${index + 1} as some-tag-4`);
+        promises.push(insertTag(ownerUser, testObjectId, 'some-tag-4'));
+      }
+    });
+    await Promise.all(promises);
+
+    memoryStore.set(testSessionId, {
+      cookie: new session.Cookie(),
+      userId: testOwners[0],
+    } as SystemSessionDataType);
+
+    const response = await supertest(app)
+      .get(`/tags/${testObjectId}`)
+      .set(SESSION_ID_HEADER, testSessionId)
+      .set('Content-Type', 'application/json');
+
+    expect(response.statusCode).toBe(200);
+
+    const tagCollectionBody: TagResponse = response.body;
+    tagCollectionBody.tags.forEach((tag) => {
+      expect(tag.tag, `Comparing some-tag-${tag.count} with ${tag.tag}`).toEqual('some-tag-' + tag.count);
+    });
+    return Promise.resolve();
+  });
+
+  test.todo<TagTestContext>(
+    'Should return a 200 but no item counts where limited read permitted',
+    async ({ memoryStore, task }) => {
+      const app = startApp({
+        enableTagCount: false,
+        sessionStore: memoryStore,
+      });
+
+      const testSessionId = createTestSessionId(task.name);
+      const testObjectId: ObjectId = createTestObjectId(task.name);
+
+      const promises: Promise<void>[] = [];
+      const testOwners: UserId[] = [1, 2, 3, 4].map((i) => createTestUserId(task.name + '-' + i));
+      testOwners.forEach(async (ownerUser: UserId, index: number) => {
+        if (index < 1) {
+          console.log(`Added ${index + 1} as some-tag-1`);
+          promises.push(insertTag(ownerUser, testObjectId, 'some-tag-1'));
+        }
+        if (index < 2) {
+          console.log(`Added ${index + 1} as some-tag-2`);
+          promises.push(insertTag(ownerUser, testObjectId, 'some-tag-2'));
+        }
+        if (index < 3) {
+          console.log(`Added ${index + 1} as some-tag-3`);
+          promises.push(insertTag(ownerUser, testObjectId, 'some-tag-3'));
+        }
+        if (index < 4) {
+          console.log(`Added ${index + 1} as some-tag-4`);
+          promises.push(insertTag(ownerUser, testObjectId, 'some-tag-4'));
+        }
+      });
+      await Promise.all(promises);
+
+      memoryStore.set(testSessionId, {
+        cookie: new session.Cookie(),
+        userId: testOwners[0],
+      } as SystemSessionDataType);
+
+      const response = await supertest(app)
+        .get(`/tags/${testObjectId}`)
+        .set(SESSION_ID_HEADER, testSessionId)
+        .set('Content-Type', 'application/json');
+
+      expect(response.statusCode).toBe(200);
+
+      const tagCollectionBody: TagResponse = response.body;
+      tagCollectionBody.tags.forEach((tag) => {
+        expect(tag.count).toBeUndefined();
+      });
+      return Promise.resolve();
+    }
+  );
 });
 
-describe('POST /tags/:objectId', () => {
-  test.todo('Return a 401 creating a tag without a session ID when mode is enabled.', async () => {});
+describe('POST.withNoSessionId /tags/:objectId', () => {
+  test.todo<TagTestContext>(
+    'Return a 401 creating a tag without a session ID when mode is enabled.',
+    async (_context: TagTestContext) => {}
+  );
 
-  test.todo('Return a 201 creating a tag without a session ID when mode is permitted.', async () => {});
+  test.todo<TagTestContext>(
+    'Return a 201 creating a tag without a session ID when mode is permitted.',
+    async (_context: TagTestContext) => {}
+  );
+});
 
-  test.todo('Return a 201 creating a tag with a valid session but anonymous user where permitted.', async () => {});
+describe('POST.withAnonymousUser /tags/:objectId', () => {
+  test.todo<TagTestContext>(
+    'Return a 201 creating a tag with a valid session but anonymous user where permitted.',
+    async () => {}
+  );
 
-  test.todo('Return a 403 creating a tag with a valid session but anonymous user where disallowed.', async () => {});
+  test.todo<TagTestContext>(
+    'Return a 401 creating a tag with a valid session but anonymous user where not permitted.',
+    async () => {}
+  );
+});
 
-  test.todo('Return a 201 creating a tag with a logged in user.', async () => {});
+describe('POST.withRegisteredUser /tags/:objectId', () => {
+  test.todo<TagTestContext>(
+    'Return a 201 creating a tag with a valid session but known user where permitted.',
+    async (_context: TagTestContext) => {}
+  );
 
-  test.todo('Return a 302 creating a tag for a user that already exists.', async () => {});
+  test.todo<TagTestContext>(
+    'Return a 403 creating a tag with a valid session but known user where disallowed.',
+    async (_context: TagTestContext) => {}
+  );
 
-  test.todo('Return a 202 creating an already existing tag that was created by other users.', async () => {});
+  test.todo<TagTestContext>(
+    'Return a 201 creating a tag with a logged in user.',
+    async (_context: TagTestContext) => {}
+  );
 
-  test.todo('Return a 409 attempting to create existing tag for that user.', async () => {});
+  test.todo<TagTestContext>(
+    'Return a 302 creating a tag for a user that already exists.',
+    async (_context: TagTestContext) => {}
+  );
 
-  test.todo('Return a 404 attempting to create a tag for an object that can not be created.', async () => {});
+  test.todo<TagTestContext>(
+    'Return a 202 creating an already existing tag that was created by other users.',
+    async (_context: TagTestContext) => {}
+  );
 
-  test.todo('Return a 201 attempting to create a tag for an object that does not exist.', async () => {});
+  test.todo<TagTestContext>(
+    'Return a 409 attempting to create existing tag for that user.',
+    async (_context: TagTestContext) => {}
+  );
+
+  test.todo<TagTestContext>(
+    'Return a 404 attempting to create a tag for an object that can not be created.',
+    async (_context: TagTestContext) => {}
+  );
+
+  test.todo<TagTestContext>(
+    'Return a 201 attempting to create a tag for an object that does not exist.',
+    async (_context: TagTestContext) => {}
+  );
 });

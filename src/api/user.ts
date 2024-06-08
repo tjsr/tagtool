@@ -2,7 +2,7 @@ import express, { NextFunction } from 'express';
 
 import { TagtoolRequest } from '../session.js';
 import { UserId } from '../types.js';
-import { getUserId } from '../auth/user.js';
+import { getUserId } from '../../../user-session-middleware/src/auth/user.js';
 
 export const getUser = async (request: TagtoolRequest, res: express.Response, next: NextFunction) => {
   const userId: UserId = getUserId(request);

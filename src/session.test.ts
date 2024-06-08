@@ -15,7 +15,7 @@ describe('retrieveSessionData', () => {
   beforeAll(async () => {
     await verifyDatabaseReady(connectionDetails);
     realAppMemoryStore = new session.MemoryStore();
-    realApp = startApp(realAppMemoryStore);
+    realApp = startApp({ sessionStore: realAppMemoryStore });
   });
 
   // beforeAll(() => {

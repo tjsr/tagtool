@@ -1,6 +1,6 @@
+import { UserModel, createUserIdFromEmail } from '@tjsr/user-session-middleware';
+
 import { EmailAddress } from '../types.js';
-import { UserModel } from '../types/model.js';
-import { createUserIdFromEmail } from '../auth/user.js';
 import { loadEnv } from '@tjsr/simple-env-utils';
 
 loadEnv();
