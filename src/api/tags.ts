@@ -1,6 +1,7 @@
 import { ObjectId, Tag, UserId } from '../types.js';
 import { TagResponse, TagResponseElement } from './apiTypes.js';
 import { TagtoolRequest, TagtoolResponse } from '../session.js';
+import express, { NextFunction } from 'express';
 
 import assert from 'node:assert';
 import { deleteOwnedTag } from '../database/deleteOwnedTag.js';
@@ -80,8 +81,8 @@ const tagsToTagResponse = (tags: Tag[], userId: UserId | undefined, reportTagCou
 };
 
 export const validateTags = async (
-  request: TagtoolRequest,
-  response: TagtoolResponse,
+  request: express.Request,
+  response: express.Response,
   next: NextFunction
 ): Promise<void> => {
   const objectId: ObjectId | undefined = request.params.objectId;
