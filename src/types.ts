@@ -1,10 +1,6 @@
 import session from 'express-session';
+import { uuid5 } from '@tjsr/user-session-middleware';
 
-export type EmailAddress = string;
-export type uuid = string;
-export type uuid5 = uuid;
-export type uuid4 = uuid;
-export type IPAddress = string;
 export type UserId = uuid5;
 export type SnowflakeType = bigint | string;
 export type ISO8601Date = Date;
@@ -20,3 +16,5 @@ export interface TagtoolConfig {
   enableTagCount?: boolean;
   sessionStore?: session.Store;
 }
+
+export type { EmailAddress, IPAddress, uuid, uuid4, uuid5 } from '@tjsr/user-session-middleware';
