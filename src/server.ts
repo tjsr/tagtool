@@ -1,9 +1,9 @@
 import { IPAddress, TagtoolConfig } from './types.js';
-import { SessionHandlerError, userSessionEndpoints, userSessionMiddleware } from '@tjsr/user-session-middleware';
-import { TagtoolRequest, TagtoolResponse, TagtoolSessionDataType } from './session.js';
+import { SessionHandlerError, userSessionMiddleware } from '@tjsr/user-session-middleware';
+import { TagtoolRequest, TagtoolResponse } from './session.js';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
 import express, { NextFunction } from 'express';
-import { isProduction, loadEnv } from '@tjsr/simple-env-utils';
+import { isProductionMode, loadEnv } from '@tjsr/simple-env-utils';
 
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -28,7 +28,7 @@ const corsOptions = {
   origin: '*',
 };
 
-export const getIp = (req: TagtoolRequest): IPAddress | undefined => {
+export const getIp = (req: express.Request): IPAddress | undefined => {
   try {
     if (req.headers.forwarded) {
       const forwardedForHeader: string | undefined = req.headers.forwarded
@@ -42,14 +42,14 @@ export const getIp = (req: TagtoolRequest): IPAddress | undefined => {
   } catch (err) {
     console.warn("Got part of forwarded header, but couldn't parse it.");
   }
-  return (req as express.Request).clientIp;
+  return req.clientIp;
 };
 
 export const startApp = (config: TagtoolConfig): express.Express => {
   if (config === undefined) {
     throw new Error('No configuration provided to startApp.');
   }
-  if (config.sessionStore === undefined && isProduction()) {
+  if (config.sessionStore === undefined && isProductionMode()) {
     throw new Error('MemoryStore is not permitted for use in production mode.');
   } else if (config.sessionStore === undefined) {
     config.sessionStore = new session.MemoryStore();
@@ -63,9 +63,8 @@ export const startApp = (config: TagtoolConfig): express.Express => {
   app.use(requestIp.mw());
   app.set('trust proxy', true);
 
-  app.use((_request: TagtoolRequest, response: TagtoolResponse, next: NextFunction) => {
+  app.use((_request: express.Request, response: express.Response, next: NextFunction) => {
     response.header('Access-Control-Expose-Headers', '*');
-    config.enableTagCount = config.enableTagCount !== undefined ? config.enableTagCount : true;
     next();
   });
 
@@ -101,7 +100,7 @@ export const startApp = (config: TagtoolConfig): express.Express => {
   app.get('/user', getUser);
   app.get('/user/:userId', getUser);
 
-  app.get('/', (_request: TagtoolRequest, response: TagtoolResponse) => {
+  app.get('/', (_request: express.Request, response: express.Request) => {
     response.send({});
     response.end();
   });
