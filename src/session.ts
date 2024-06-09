@@ -28,9 +28,7 @@ interface TagtoolRequestProperties extends Record<string, any> {
 }
 
 // export type TagtoolRequest = SystemHttpRequestType<TagtoolSessionDataType> & Partial<TagtoolRequestProperties>;
-export interface TagtoolRequest
-  extends SystemHttpRequestType<TagtoolSessionDataType, TagtoolSessionStoreDataType>,
-    TagtoolRequestProperties {}
+export interface TagtoolRequest extends SystemHttpRequestType<TagtoolSessionDataType>, TagtoolRequestProperties {}
 
 export interface TagtoolResponse extends SystemHttpResponseType<TagtoolSessionStoreDataType> {}
 

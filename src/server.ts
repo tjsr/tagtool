@@ -100,7 +100,7 @@ export const startApp = (config: TagtoolConfig): express.Express => {
   app.get('/user', getUser);
   app.get('/user/:userId', getUser);
 
-  app.get('/', (_request: express.Request, response: express.Request) => {
+  app.get('/', (_request: express.Request, response: express.Response) => {
     response.send({});
     response.end();
   });

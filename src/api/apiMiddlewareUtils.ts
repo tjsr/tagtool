@@ -2,7 +2,7 @@ import { SystemHttpRequestType, SystemSessionDataType } from '@tjsr/user-session
 import express, { NextFunction } from 'express';
 
 import { UserId } from '../types.js';
-import { getUserId } from '@tjsr/user-session-middleware';
+import { getUserIdFromSession } from '@tjsr/user-session-middleware';
 
 export const endWithJsonMessage = async <ResponseType extends express.Response>(
   res: ResponseType,
@@ -35,18 +35,18 @@ export const validateHasUserId = async <
   ResponseType extends express.Response,
 >(
   request: RequestType,
-  res: ResponseType,
+  response: ResponseType,
   next: NextFunction
 ): Promise<void> => {
   let userId: UserId | undefined = undefined;
   try {
-    userId = getUserId(request);
+    userId = await getUserIdFromSession(request.session);
   } catch (error) {
     console.warn('Got an exception when getting userId data', error);
-    return endWithJsonMessage(res, 500, 'Invalid user', next);
+    return endWithJsonMessage(response, 500, 'Invalid user', next);
   }
   if (userId === undefined) {
-    return endWithJsonMessage(res, 401, 'Invalid user');
+    return endWithJsonMessage(response, 401, 'Invalid user', next);
   }
   console.debug(validateHasUserId, 'Got valid userId', userId);
   next();
