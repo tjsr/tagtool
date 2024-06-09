@@ -1,14 +1,13 @@
 import { ObjectId, UserId } from '../types.js';
 import { TaskContext, afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { closeConnectionPool, verifyDatabaseReady } from '@tjsr/mysql-pool-utils';
+import { createRandomId, createRandomUserId } from '@tjsr/user-session-middleware';
 import { createTestObjectId, createTestSessionId, createTestUserId } from '../testUtils.js';
 
 import { SESSION_ID_HEADER } from './apiUtils.js';
 import { SystemSessionDataType } from '@tjsr/user-session-middleware';
 import { TagResponse } from './apiTypes.js';
 import { connectionDetails } from '../setup-tests.js';
-import { createRandomId } from '../../../user-session-middleware/src/utils/createRandomId.js';
-import { createRandomUserId } from '../../../user-session-middleware/src/auth/user.js';
 import { elideValues } from '../utils/elideValues.js';
 import express from 'express';
 import { insertTag } from '../database/insertTag.js';
