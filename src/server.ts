@@ -1,10 +1,10 @@
-import { IPAddress, TagtoolConfig } from './types.js';
 import { SessionHandlerError, userSessionMiddleware } from '@tjsr/user-session-middleware';
-import { TagtoolRequest, TagtoolResponse } from './session.js';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
 import express, { NextFunction } from 'express';
 import { isProductionMode, loadEnv } from '@tjsr/simple-env-utils';
 
+import { TagtoolConfig } from './types.js';
+import { TagtoolRequest } from './session.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { getUser } from './api/user.js';
@@ -26,23 +26,6 @@ const corsOptions = {
   'Access-Control-Expose-Headers': '*',
   optionsSuccessStatus: 200,
   origin: '*',
-};
-
-export const getIp = (req: express.Request): IPAddress | undefined => {
-  try {
-    if (req.headers.forwarded) {
-      const forwardedForHeader: string | undefined = req.headers.forwarded
-        .split(';')
-        .find((header: string) => header?.startsWith('for='));
-      const forParts: string[] | undefined = forwardedForHeader?.split('=');
-      if (forParts !== undefined && forParts.length == 2) {
-        return forParts[1];
-      }
-    }
-  } catch (err) {
-    console.warn("Got part of forwarded header, but couldn't parse it.");
-  }
-  return req.clientIp;
 };
 
 export const startApp = (config: TagtoolConfig): express.Express => {
