@@ -3,13 +3,12 @@
 import { ObjectId, Tag, UserId } from '../types.js';
 import { TagResponse, TagResponseElement } from './apiTypes.js';
 import { TagtoolRequest, TagtoolResponse } from '../types/request.js';
+import { endWithJsonMessage, getUserIdFromRequest, getUserIdFromSession } from '@tjsr//user-session-middleware';
 import express, { NextFunction } from 'express';
 
 import assert from 'node:assert';
 import { deleteOwnedTag } from '../database/deleteOwnedTag.js';
-import { endWithJsonMessage } from '../../../user-session-middleware/src/utils/apiMiddlewareUtils.js';
 import { findTagsByObjectId } from '../database/findTagsByObjectId.js';
-import { getUserIdFromRequest } from '../../../user-session-middleware/src/auth/user.js';
 import { insertTag } from '../database/insertTag.js';
 import { validateObjectId } from '../utils/validateObjectId.js';
 import { validateTag } from '../utils/validateTag.js';
@@ -21,7 +20,7 @@ const checkObjectExists = async (id: ObjectId): Promise<boolean> => {
 
 export const addTag = async (request: TagtoolRequest, response: TagtoolResponse, next: NextFunction): Promise<void> => {
   try {
-    const userId: UserId | undefined = await getUserIdFromRequest(request);
+    const userId: UserId | undefined = await getUserIdFromSession(request.session);
     assert(request.params, 'Request params must be defined');
     assert(request.params.objectId, 'Request params.objectId must be defined');
     assert(userId, 'User ID must be defined');
