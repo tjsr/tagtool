@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import { SESSION_ID_HEADER } from './apiUtils.js';
-import { TagtoolSessionDataType } from '../session.js';
+import { TagtoolSessionDataType } from '../types/session.js';
 import express from 'express';
 import session from 'express-session';
 import { startApp } from '../server.js';

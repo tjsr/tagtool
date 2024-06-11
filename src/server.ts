@@ -1,17 +1,16 @@
-import { SessionHandlerError, userSessionMiddleware } from '@tjsr/user-session-middleware';
+import { SessionHandlerError, userSessionMiddleware, validateHasUserId } from '@tjsr/user-session-middleware';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
 import express, { NextFunction } from 'express';
 import { isProductionMode, loadEnv } from '@tjsr/simple-env-utils';
 
 import { TagtoolConfig } from './types.js';
-import { TagtoolRequest } from './session.js';
+import { TagtoolRequest } from './types/request.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { getUser } from './api/user.js';
 import morgan from 'morgan';
 import requestIp from 'request-ip';
 import session from 'express-session';
-import { validateHasUserId } from './api/apiMiddlewareUtils.js';
 
 export const DEFAULT_HTTP_PORT = 8242;
 const enableCookies = true;
@@ -72,16 +71,43 @@ export const startApp = (config: TagtoolConfig): express.Express => {
   );
   app.use(express.json());
 
-  app.use(userSessionEndpoints);
+  // const _validateHasUserIdFunc: RequestHandler & UserSessionMiddlewareRequestHandler = validateHasUserId;
+  // const _getUserFunc: RequestHandler & UserSessionMiddlewareRequestHandler = getUser;
+
+  const asyncHandlerWrap = (fn: Function) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (...args: any) => {
+      return fn(...args).catch(args[2]);
+    };
+  };
+
+  // app.use(userSessionEndpoints);
   // app.get('/session', apiSession);
   // app.post('/login', login);
   // app.get('/logout', logout);
   // app.post('/logout', logout);
-  app.get('/tags/:objectId', validateHasUserId, validateTags, validateObjectExists, getTags);
-  app.post('/tags/:objectId', validateHasUserId, validateTags, addTag);
-  app.delete('/tags/:objectId', validateHasUserId, validateTags, validateObjectExists, deleteTags);
-  app.get('/user', getUser);
-  app.get('/user/:userId', getUser);
+  app.get(
+    '/tags/:objectId',
+    validateHasUserId as express.RequestHandler,
+    validateTags,
+    asyncHandlerWrap(validateObjectExists) as express.RequestHandler,
+    asyncHandlerWrap(getTags) as express.RequestHandler
+  );
+  app.post(
+    '/tags/:objectId',
+    validateHasUserId as express.RequestHandler,
+    validateTags,
+    asyncHandlerWrap(addTag) as express.RequestHandler
+  );
+  app.delete(
+    '/tags/:objectId',
+    validateHasUserId as express.RequestHandler,
+    validateTags,
+    asyncHandlerWrap(validateObjectExists) as express.RequestHandler,
+    asyncHandlerWrap(deleteTags) as express.RequestHandler
+  );
+  app.get('/user', getUser as express.RequestHandler);
+  app.get('/user/:userId', getUser as express.RequestHandler);
 
   app.get('/', (_request: express.Request, response: express.Response) => {
     response.send({});
@@ -121,9 +147,9 @@ export const startApp = (config: TagtoolConfig): express.Express => {
     (
       error: Error,
       // request: TagtoolRequest,
-      request: TagtoolRequest,
+      // request: TagtoolRequest,
       // request: Request, // SystemHttpRequestType<TagtoolSessionDataType>,
-      // request: express.Request, // SystemHttpRequestType<TagtoolSessionDataType>,
+      request: express.Request, // SystemHttpRequestType<TagtoolSessionDataType>,
       // request: SystemHttpRequestType<SystemSessionDataType>,
       // request: SystemHttpRequestType<TagtoolSessionDataType>,
       // _response: SystemHttpResponseType<SessionStoreDataType>,
@@ -132,7 +158,9 @@ export const startApp = (config: TagtoolConfig): express.Express => {
       // _response: TagtoolResponse,
       next: express.NextFunction
     ): void => {
-      request.reportTagCounts = true;
+      const tagReq: TagtoolRequest = request as TagtoolRequest;
+      tagReq.reportTagCounts = true;
+      response.locals.reportTagCounts = true;
       if (SessionHandlerError.isType(error)) {
         const sessionError: SessionHandlerError = error as SessionHandlerError;
         console.error('errorHandler', request.statusCode, sessionError.status, sessionError, sessionError.stack);

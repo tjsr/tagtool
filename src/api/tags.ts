@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { ObjectId, Tag, UserId } from '../types.js';
 import { TagResponse, TagResponseElement } from './apiTypes.js';
-import { TagtoolRequest, TagtoolResponse } from '../session.js';
+import { TagtoolRequest, TagtoolResponse } from '../types/request.js';
 import express, { NextFunction } from 'express';
 
 import assert from 'node:assert';
 import { deleteOwnedTag } from '../database/deleteOwnedTag.js';
-import { endWithJsonMessage } from './apiMiddlewareUtils.js';
+import { endWithJsonMessage } from '../../../user-session-middleware/src/utils/apiMiddlewareUtils.js';
 import { findTagsByObjectId } from '../database/findTagsByObjectId.js';
 import { getUserIdFromRequest } from '../../../user-session-middleware/src/auth/user.js';
 import { insertTag } from '../database/insertTag.js';
@@ -13,10 +15,11 @@ import { validateObjectId } from '../utils/validateObjectId.js';
 import { validateTag } from '../utils/validateTag.js';
 
 const checkObjectExists = async (id: ObjectId): Promise<boolean> => {
+  // TODO: This is way too simple to be complete - must be something to do here.
   return Promise.resolve(id !== undefined);
 };
 
-export const addTag = async (request: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
+export const addTag = async (request: TagtoolRequest, response: TagtoolResponse, next: NextFunction): Promise<void> => {
   try {
     const userId: UserId | undefined = await getUserIdFromRequest(request);
     assert(request.params, 'Request params must be defined');
@@ -28,8 +31,7 @@ export const addTag = async (request: TagtoolRequest, res: TagtoolResponse, next
 
     const tag = request.body.tag;
     if (!tag || !validateTag(tag)) {
-      endWithJsonMessage(res, 400, 'Invalid tag', next);
-      return;
+      return endWithJsonMessage(response, 400, 'Invalid tag', next);
     }
 
     const tags: Tag[] = await findTagsByObjectId(objectId);
@@ -38,8 +40,10 @@ export const addTag = async (request: TagtoolRequest, res: TagtoolResponse, next
       await insertTag(userId, objectId, tag);
     }
     next();
+    return Promise.resolve();
   } catch (err) {
     next(err);
+    return Promise.reject(err);
   }
 };
 
@@ -80,7 +84,7 @@ const tagsToTagResponse = (tags: Tag[], userId: UserId | undefined, reportTagCou
   return response;
 };
 
-export const validateTags = async (
+export const validateTags: express.RequestHandler = async (
   request: express.Request,
   response: express.Response,
   next: NextFunction
@@ -97,21 +101,26 @@ export const validateTags = async (
   return Promise.resolve();
 };
 
-export const validateObjectExists = async (
-  request: TagtoolRequest,
-  res: TagtoolResponse,
-  next: NextFunction
-): Promise<void> => {
-  const objectId: ObjectId | undefined = request.params.objectId;
-  const objectExists = await checkObjectExists(objectId);
-  if (!objectExists) {
-    return endWithJsonMessage(res, 404, 'Object not found', next, { objectId });
-  }
+export const validateObjectExists =
+  // <
+  //   TagtoolRequest,
+  //   TagtoolResponse,
+  //   P extends ParamsDictionary = ParamsDictionary,
+  //   ResBody = any,
+  //   ReqBody = any,
+  //   ReqQuery extends QueryString.ParsedQs = QueryString.ParsedQs
+  // >
+  async (request: TagtoolRequest, response: TagtoolResponse, next: NextFunction): Promise<void> => {
+    const objectId: ObjectId | undefined = request.params.objectId;
+    const objectExists = await checkObjectExists(objectId);
+    if (!objectExists) {
+      return endWithJsonMessage(response, 404, 'Object not found', next, { objectId });
+    }
 
-  console.debug(validateObjectExists, `Object ${objectId} exists.`);
-  next();
-  return Promise.resolve();
-};
+    console.debug(validateObjectExists, `Object ${objectId} exists.`);
+    next();
+    return Promise.resolve();
+  };
 
 export const getTags = async (request: TagtoolRequest, res: TagtoolResponse, next: NextFunction): Promise<void> => {
   try {
