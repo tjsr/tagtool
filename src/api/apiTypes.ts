@@ -6,7 +6,7 @@ export interface TagResponse {
 }
 
 export interface TagResponseElement {
+  count?: number;
   isOwner?: boolean;
   tag: string;
-  count: number;
 }

@@ -1,0 +1,44 @@
+// export type AsyncTagtoolRequestHandlerWrapper = (handler: AsyncTagtoolRequestHandler) => TagtoolRequestHandler;
+
+// const WrapAsyncTagtoolRequestHandler: AsyncTagtoolRequestHandlerWrapper = <
+// SessionDataType extends SystemSessionDataType = SystemSessionDataType,
+// StoreDataType extends SessionStoreDataType = SessionStoreDataType,
+// P = ParamsDictionary,
+// ResBody = any,
+// ReqBody = any,
+// ReqQuery = core.Query,
+// Locals extends Record<string, any> | SystemResponseLocals<StoreDataType> =
+//   SystemResponseLocals<StoreDataType>
+// >(
+//   handler: AsyncTagtoolRequestHandler
+// ): (request: SystemHttpRequestType<
+//   SessionDataType,
+//   StoreDataType,
+//   P,
+//   ResBody,
+//   ReqBody,
+//   ReqQuery,
+//   Locals
+//   >, response: SystemHttpResponseType, next: NextFunction) => {
+//   return (request: SystemHttpRequestType, response: SystemHttpResponseType, next: NextFunction) => {
+//     handler(request as TagtoolRequest, response as TagtoolResponse, next).then(() => {
+//       return;
+//     }).catch((pErr: unknown) => {
+//       throw next(pErr);
+//     });
+//     return;
+//   };
+// };
+
+//   request: SystemHttpRequestType,
+//   response: SystemHttpResponseType,
+//   next: NextFunction
+// ): void => {
+//   (trequest: TagtoolRequest, tresponse: TagtoolResponse, tnext: NextFunction) => new Promise((p) => {
+//   p.then((hfn: (trequest: TagtoolRequest, tresponse: TagtoolResponse, tnext: NextFunction) => void) => {
+//     hfn(trequest as SystemHttpRequestType, tresponse, tnext);
+//   }).catch((err: Error) => {
+//     next(err);
+//   });
+// });
+//   }; ) => void;

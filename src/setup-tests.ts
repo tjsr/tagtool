@@ -1,12 +1,15 @@
 import { intEnv, loadEnv, setTestMode } from '@tjsr/simple-env-utils';
 
 import { ConnectionOptions } from 'mysql2/promise';
+import { setUserIdNamespace } from '@tjsr/user-session-middleware';
+import { v4 as uuidv4 } from 'uuid';
 
 loadEnv();
 
 process.env['USE_LOGGING'] = 'false';
 
 setTestMode();
+setUserIdNamespace(process.env['USERID_UUID_NAMESPACE'] || uuidv4());
 
 export const connectionDetails: ConnectionOptions = {
   database: process.env['MYSQL_DATABASE'] || 'testdb',
@@ -15,3 +18,4 @@ export const connectionDetails: ConnectionOptions = {
   port: intEnv('MYSQL_PORT', 3306),
   user: process.env['MYSQL_USER'] || 'testuser',
 } as const;
+

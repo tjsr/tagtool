@@ -1,20 +1,16 @@
-import { SessionHandlerError, userSessionMiddleware } from '@tjsr/user-session-middleware';
-import { TagtoolRequest, TagtoolResponse } from './session.js';
+import { SessionHandlerError, userSessionMiddleware, validateHasUserId } from '@tjsr/user-session-middleware';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
 import express, { NextFunction } from 'express';
+import { isProductionMode, loadEnv } from '@tjsr/simple-env-utils';
 
-import { IPAddress } from './types.js';
-import { session as apiSession } from './api/session.js';
+import { TagtoolConfig } from './types.js';
+import { TagtoolRequest } from './types/request.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { getUser } from './api/user.js';
-import { loadEnv } from '@tjsr/simple-env-utils';
-import { login } from './api/login.js';
-import { logout } from './api/logout.js';
 import morgan from 'morgan';
 import requestIp from 'request-ip';
 import session from 'express-session';
-import { validateHasUserId } from './api/apiMiddlewareUtils.js';
 
 export const DEFAULT_HTTP_PORT = 8242;
 const enableCookies = true;
@@ -31,24 +27,16 @@ const corsOptions = {
   origin: '*',
 };
 
-export const getIp = (req: TagtoolRequest): IPAddress | undefined => {
-  try {
-    if (req.headers.forwarded) {
-      const forwardedForHeader: string | undefined = req.headers.forwarded
-        .split(';')
-        .find((header: string) => header?.startsWith('for='));
-      const forParts: string[] | undefined = forwardedForHeader?.split('=');
-      if (forParts !== undefined && forParts.length == 2) {
-        return forParts[1];
-      }
-    }
-  } catch (err) {
-    console.warn("Got part of forwarded header, but couldn't parse it.");
+export const startApp = (config: TagtoolConfig): express.Express => {
+  if (config === undefined) {
+    throw new Error('No configuration provided to startApp.');
   }
-  return (req as express.Request).clientIp;
-};
+  if (config.sessionStore === undefined && isProductionMode()) {
+    throw new Error('MemoryStore is not permitted for use in production mode.');
+  } else if (config.sessionStore === undefined) {
+    config.sessionStore = new session.MemoryStore();
+  }
 
-export const startApp = (sessionStore?: session.MemoryStore): express.Express => {
   const app: express.Express = express();
   if (process.env['USE_LOGGING'] !== 'false') {
     app.use(morganLog);
@@ -57,8 +45,8 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   app.use(requestIp.mw());
   app.set('trust proxy', true);
 
-  app.use((req: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
-    res.header('Access-Control-Expose-Headers', '*');
+  app.use((_request: express.Request, response: express.Response, next: NextFunction) => {
+    response.header('Access-Control-Expose-Headers', '*');
     next();
   });
 
@@ -70,7 +58,7 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   app.use(
     userSessionMiddleware({
       skipExposeHeaders: false,
-      store: sessionStore,
+      store: config.sessionStore,
     })
   );
 
@@ -83,37 +71,119 @@ export const startApp = (sessionStore?: session.MemoryStore): express.Express =>
   );
   app.use(express.json());
 
-  app.get('/session', apiSession);
-  app.post('/login', login);
-  app.get('/logout', logout);
-  app.get('/tags/:objectId', validateHasUserId, validateTags, validateObjectExists, getTags);
-  app.post('/tags/:objectId', validateHasUserId, validateTags, addTag);
-  app.delete('/tags/:objectId', validateHasUserId, validateTags, validateObjectExists, deleteTags);
-  app.get('/user', getUser);
-  app.get('/user/:userId', getUser);
+  // const _validateHasUserIdFunc: RequestHandler & UserSessionMiddlewareRequestHandler = validateHasUserId;
+  // const _getUserFunc: RequestHandler & UserSessionMiddlewareRequestHandler = getUser;
 
-  app.get('/', (req: TagtoolRequest, res: TagtoolResponse) => {
-    res.send({});
-    res.end();
+  const asyncHandlerWrap = (fn: Function) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (...args: any) => {
+      return fn(...args).catch(args[2]);
+    };
+  };
+
+  // app.use(userSessionEndpoints);
+  // app.get('/session', apiSession);
+  // app.post('/login', login);
+  // app.get('/logout', logout);
+  // app.post('/logout', logout);
+  app.get(
+    '/tags/:objectId',
+    validateHasUserId as express.RequestHandler,
+    validateTags,
+    asyncHandlerWrap(validateObjectExists) as express.RequestHandler,
+    asyncHandlerWrap(getTags) as express.RequestHandler
+  );
+  app.post(
+    '/tags/:objectId',
+    validateHasUserId as express.RequestHandler,
+    validateTags,
+    asyncHandlerWrap(addTag) as express.RequestHandler
+  );
+  app.delete(
+    '/tags/:objectId',
+    validateHasUserId as express.RequestHandler,
+    validateTags,
+    asyncHandlerWrap(validateObjectExists) as express.RequestHandler,
+    asyncHandlerWrap(deleteTags) as express.RequestHandler
+  );
+  app.get('/user', getUser as express.RequestHandler);
+  app.get('/user/:userId', getUser as express.RequestHandler);
+
+  app.get('/', (_request: express.Request, response: express.Response) => {
+    response.send({});
+    response.end();
   });
 
-  app.use((err: Error, req: TagtoolRequest, res: TagtoolResponse, next: NextFunction): void => {
-    if (SessionHandlerError.isType(err)) {
-      const sessionError: SessionHandlerError = err as SessionHandlerError;
-      console.error('errorHandler', res.statusCode, sessionError.status, sessionError, sessionError.stack);
-      res.status(sessionError.status);
-      res.json({ message: sessionError.message });
-    } else if (res.statusCode <= 200) {
-      console.error('errorHandler', res.statusCode, err, err.stack, 'No status code set on response, setting to 500.');
-      res.status(500);
-    } else {
-      console.error(err, err.stack);
+  // type TestTagtoolRequest =
+  //   | SystemHttpRequestType<TagtoolSessionDataType>
+  //   | (SystemHttpRequestType<TagtoolSessionDataType> & {
+  //       reportTagCounts: boolean;
+  //     })
+  //   | {
+  //       reportTagCounts: boolean;
+  //     };
+
+  // type TestTagtoolRequest2 = SystemHttpRequestType<TagtoolSessionDataType> & {
+  //   reportTagCounts: boolean;
+  // };
+
+  // type TestTagtoolRequest3 =
+  //   | SystemHttpRequestType<TagtoolSessionDataType>
+  //   | {
+  //       reportTagCounts: boolean;
+  //     };
+
+  // type TestTagtoolRequest4 = SystemHttpRequestType<TagtoolSessionDataType> &
+  //   (SystemHttpRequestType<TagtoolSessionDataType> & {
+  //     reportTagCounts: boolean;
+  //   });
+
+  // type TestTagtoolRequest5 = SystemHttpRequestType<TagtoolSessionDataType> &
+  //   Partial<{
+  //     reportTagCounts: boolean;
+  //   }>;
+
+  app.use(
+    (
+      error: Error,
+      // request: TagtoolRequest,
+      // request: TagtoolRequest,
+      // request: Request, // SystemHttpRequestType<TagtoolSessionDataType>,
+      request: express.Request, // SystemHttpRequestType<TagtoolSessionDataType>,
+      // request: SystemHttpRequestType<SystemSessionDataType>,
+      // request: SystemHttpRequestType<TagtoolSessionDataType>,
+      // _response: SystemHttpResponseType<SessionStoreDataType>,
+      // _response: SystemHttpResponseType<TagtoolSessionStoreDataType>,
+      response: express.Response,
+      // _response: TagtoolResponse,
+      next: express.NextFunction
+    ): void => {
+      const tagReq: TagtoolRequest = request as TagtoolRequest;
+      tagReq.reportTagCounts = true;
+      response.locals.reportTagCounts = true;
+      if (SessionHandlerError.isType(error)) {
+        const sessionError: SessionHandlerError = error as SessionHandlerError;
+        console.error('errorHandler', request.statusCode, sessionError.status, sessionError, sessionError.stack);
+        response.status(sessionError.status);
+        response.json({ message: sessionError.message });
+      } else if (response.statusCode <= 200) {
+        console.error(
+          'errorHandler',
+          request.statusCode,
+          error,
+          error.stack,
+          'No status code set on response, setting to 500.'
+        );
+        response.status(500);
+      } else {
+        console.error(error, error.stack);
+      }
+      // res.send();
+      // res.end();
+
+      next(error);
     }
-    // res.send();
-    // res.end();
-
-    next(err);
-  });
+  );
 
   app.use(express.static('build'));
 
