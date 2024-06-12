@@ -3,10 +3,11 @@
 import { ObjectId, Tag, UserId } from '../types.js';
 import { TagResponse, TagResponseElement } from './apiTypes.js';
 import { TagtoolRequest, TagtoolResponse } from '../types/request.js';
-import { endWithJsonMessage, getUserIdFromRequest, getUserIdFromSession } from '@tjsr//user-session-middleware';
+import { endWithJsonMessage, getUserIdFromRequest, getUserIdFromSession } from '@tjsr/user-session-middleware';
 import express, { NextFunction } from 'express';
 
 import assert from 'node:assert';
+import { asyncHandlerWrap } from '../utils/asyncHandlerWrap.js';
 import { deleteOwnedTag } from '../database/deleteOwnedTag.js';
 import { findTagsByObjectId } from '../database/findTagsByObjectId.js';
 import { insertTag } from '../database/insertTag.js';
@@ -83,7 +84,7 @@ const tagsToTagResponse = (tags: Tag[], userId: UserId | undefined, reportTagCou
   return response;
 };
 
-export const validateTags: express.RequestHandler = async (
+export const validateTagsAsync = async (
   request: express.Request,
   response: express.Response,
   next: NextFunction
@@ -95,10 +96,13 @@ export const validateTags: express.RequestHandler = async (
   if (!validateObjectId(objectId)) {
     return endWithJsonMessage(response, 400, `Invalid objectId ${objectId}`, next);
   }
-  console.debug(validateTags, `Got valid tags for objectId ${objectId}`);
+  console.debug(validateTagsAsync, `Got valid tags for objectId ${objectId}`);
   next();
   return Promise.resolve();
 };
+
+export const validateTags: express.RequestHandler = asyncHandlerWrap(validateTagsAsync);
+
 
 export const validateObjectExists =
   // <

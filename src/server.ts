@@ -5,6 +5,7 @@ import { isProductionMode, loadEnv } from '@tjsr/simple-env-utils';
 
 import { TagtoolConfig } from './types.js';
 import { TagtoolRequest } from './types/request.js';
+import { asyncHandlerWrap } from './utils/asyncHandlerWrap.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { getUser } from './api/user.js';
@@ -45,10 +46,12 @@ export const startApp = (config: TagtoolConfig): express.Express => {
   app.use(requestIp.mw());
   app.set('trust proxy', true);
 
-  app.use((_request: express.Request, response: express.Response, next: NextFunction) => {
+  const accessControlHeaders: express.RequestHandler = (_request, response, next: NextFunction): void => {
     response.header('Access-Control-Expose-Headers', '*');
     next();
-  });
+  };
+
+  app.use(accessControlHeaders);
 
   if (enableCookies) {
     // TODO: express-session no longer needs cookie parser, so if the app isn't using cookies, eg we're
@@ -73,13 +76,6 @@ export const startApp = (config: TagtoolConfig): express.Express => {
 
   // const _validateHasUserIdFunc: RequestHandler & UserSessionMiddlewareRequestHandler = validateHasUserId;
   // const _getUserFunc: RequestHandler & UserSessionMiddlewareRequestHandler = getUser;
-
-  const asyncHandlerWrap = (fn: Function) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (...args: any) => {
-      return fn(...args).catch(args[2]);
-    };
-  };
 
   // app.use(userSessionEndpoints);
   // app.get('/session', apiSession);
@@ -109,7 +105,7 @@ export const startApp = (config: TagtoolConfig): express.Express => {
   app.get('/user', getUser as express.RequestHandler);
   app.get('/user/:userId', getUser as express.RequestHandler);
 
-  app.get('/', (_request: express.Request, response: express.Response) => {
+  app.get('/', (_request, response: express.Response) => {
     response.send({});
     response.end();
   });
@@ -145,11 +141,13 @@ export const startApp = (config: TagtoolConfig): express.Express => {
 
   app.use(
     (
-      error: Error,
+      error: Error | SessionHandlerError,
       // request: TagtoolRequest,
       // request: TagtoolRequest,
       // request: Request, // SystemHttpRequestType<TagtoolSessionDataType>,
-      request: express.Request, // SystemHttpRequestType<TagtoolSessionDataType>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      request: any,
+      // : TagtoolRequest<ParamsDictionary, any, any, ParsedQs>, // SystemHttpRequestType<TagtoolSessionDataType>,
       // request: SystemHttpRequestType<SystemSessionDataType>,
       // request: SystemHttpRequestType<TagtoolSessionDataType>,
       // _response: SystemHttpResponseType<SessionStoreDataType>,
