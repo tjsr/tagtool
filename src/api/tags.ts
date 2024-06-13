@@ -3,8 +3,7 @@
 import { ObjectId, Tag, UserId } from '../types.js';
 import { TagResponse, TagResponseElement } from './apiTypes.js';
 import { TagtoolRequest, TagtoolResponse } from '../types/request.js';
-import { endWithJsonMessage, getUserIdFromRequest, getUserIdFromSession } from '@tjsr/user-session-middleware';
-import express, { NextFunction } from 'express';
+import { endWithJsonMessage, express, getUserIdFromRequest, getUserIdFromSession } from '@tjsr/user-session-middleware';
 
 import assert from 'node:assert';
 import { asyncHandlerWrap } from '../utils/asyncHandlerWrap.js';
@@ -14,12 +13,18 @@ import { insertTag } from '../database/insertTag.js';
 import { validateObjectId } from '../utils/validateObjectId.js';
 import { validateTag } from '../utils/validateTag.js';
 
+// import express, { NextFunction } from 'express';
+
 const checkObjectExists = async (id: ObjectId): Promise<boolean> => {
   // TODO: This is way too simple to be complete - must be something to do here.
   return Promise.resolve(id !== undefined);
 };
 
-export const addTag = async (request: TagtoolRequest, response: TagtoolResponse, next: NextFunction): Promise<void> => {
+export const addTag = async (
+  request: TagtoolRequest,
+  response: TagtoolResponse,
+  next: express.NextFunction
+): Promise<void> => {
   try {
     const userId: UserId | undefined = await getUserIdFromSession(request.session);
     assert(request.params, 'Request params must be defined');
@@ -87,7 +92,7 @@ const tagsToTagResponse = (tags: Tag[], userId: UserId | undefined, reportTagCou
 export const validateTagsAsync = async (
   request: express.Request,
   response: express.Response,
-  next: NextFunction
+  next: express.NextFunction
 ): Promise<void> => {
   const objectId: ObjectId | undefined = request.params.objectId;
   if (!objectId) {
@@ -103,7 +108,6 @@ export const validateTagsAsync = async (
 
 export const validateTags: express.RequestHandler = asyncHandlerWrap(validateTagsAsync);
 
-
 export const validateObjectExists =
   // <
   //   TagtoolRequest,
@@ -113,7 +117,7 @@ export const validateObjectExists =
   //   ReqBody = any,
   //   ReqQuery extends QueryString.ParsedQs = QueryString.ParsedQs
   // >
-  async (request: TagtoolRequest, response: TagtoolResponse, next: NextFunction): Promise<void> => {
+  async (request: TagtoolRequest, response: TagtoolResponse, next: express.NextFunction): Promise<void> => {
     const objectId: ObjectId | undefined = request.params.objectId;
     const objectExists = await checkObjectExists(objectId);
     if (!objectExists) {
@@ -125,7 +129,11 @@ export const validateObjectExists =
     return Promise.resolve();
   };
 
-export const getTags = async (request: TagtoolRequest, res: TagtoolResponse, next: NextFunction): Promise<void> => {
+export const getTags = async (
+  request: TagtoolRequest,
+  res: TagtoolResponse,
+  next: express.NextFunction
+): Promise<void> => {
   try {
     const userId: UserId | undefined = await getUserIdFromRequest(request);
     const objectId: ObjectId | undefined = request.params?.objectId;
@@ -149,7 +157,7 @@ export const getTags = async (request: TagtoolRequest, res: TagtoolResponse, nex
   }
 };
 
-export const deleteTags = async (request: TagtoolRequest, res: TagtoolResponse, next: NextFunction) => {
+export const deleteTags = async (request: TagtoolRequest, res: TagtoolResponse, next: express.NextFunction) => {
   try {
     const userId: UserId | undefined = await getUserIdFromRequest(request);
     if (userId === undefined) {

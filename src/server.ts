@@ -77,10 +77,18 @@ export const startApp = (config: TagtoolConfig): express.Express => {
   // const _validateHasUserIdFunc: RequestHandler & UserSessionMiddlewareRequestHandler = validateHasUserId;
   // const _getUserFunc: RequestHandler & UserSessionMiddlewareRequestHandler = getUser;
 
+  // TODO: Add session endpoint block in USM.
   // app.use(userSessionEndpoints);
+
+  // TODO: Migrate /session endpoint to USM.
   // app.get('/session', apiSession);
+
+  // TODO: Migrate /login endpoint to USM.
   // app.post('/login', login);
+
+  // TODO: Migrate /logout endpoint to USM.
   // app.get('/logout', logout);
+  // TODO: Migrate /logout endpoint to USM.
   // app.post('/logout', logout);
   app.get(
     '/tags/:objectId',
@@ -148,7 +156,7 @@ export const startApp = (config: TagtoolConfig): express.Express => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       request: any,
       // : TagtoolRequest<ParamsDictionary, any, any, ParsedQs>, // SystemHttpRequestType<TagtoolSessionDataType>,
-      // request: SystemHttpRequestType<SystemSessionDataType>,
+      // request: SystemHttpRequestType<UserSessionData>,
       // request: SystemHttpRequestType<TagtoolSessionDataType>,
       // _response: SystemHttpResponseType<SessionStoreDataType>,
       // _response: SystemHttpResponseType<TagtoolSessionStoreDataType>,

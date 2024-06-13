@@ -1,5 +1,5 @@
-import { SessionStoreDataType, SystemSessionDataType } from '@tjsr/user-session-middleware';
+import { SessionStoreDataType, UserSessionData } from '@tjsr/user-session-middleware';
 
-export interface TagtoolSessionDataType extends SystemSessionDataType {}
+export interface TagtoolUserSessionData extends UserSessionData {}
 
 export interface TagtoolSessionStoreDataType extends SessionStoreDataType {}

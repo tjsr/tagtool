@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import { SESSION_ID_HEADER } from './apiUtils.js';
-import { TagtoolSessionDataType } from '../types/session.js';
+import { TagtoolUserSessionData } from '../types/session.js';
 import express from 'express';
 import session from 'express-session';
 import { startApp } from '../server.js';
@@ -17,7 +17,7 @@ describe('API tests for tags', () => {
     memoryStore.set(testSessionId, {
       cookie: new session.Cookie(),
       userId: testUserId,
-    } as TagtoolSessionDataType);
+    } as TagtoolUserSessionData);
     app = startApp({ sessionStore: memoryStore });
     return;
   });

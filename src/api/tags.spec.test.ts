@@ -1,12 +1,12 @@
 import { ObjectId, UserId } from '../types.js';
 import { TaskContext, afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import { UserSessionData, createRandomId, createRandomUserId } from '@tjsr/user-session-middleware';
 import { closeConnectionPool, verifyDatabaseReady } from '@tjsr/mysql-pool-utils';
-import { createRandomId, createRandomUserId } from '@tjsr/user-session-middleware';
 import { createTestObjectId, createTestSessionId, createTestUserId } from '../testUtils.js';
 
 import { SESSION_ID_HEADER } from './apiUtils.js';
-import { SystemSessionDataType } from '@tjsr/user-session-middleware';
 import { TagResponse } from './apiTypes.js';
+import { TagtoolUserSessionData } from '../types/session.js';
 import { connectionDetails } from '../setup-tests.js';
 import { elideValues } from '../utils/elideValues.js';
 import express from 'express';
@@ -50,7 +50,7 @@ describe('GET /tags', () => {
     const testSessionId = 's1234';
     context.memoryStore.set(testSessionId, {
       cookie: new session.Cookie(),
-    });
+    } as TagtoolUserSessionData);
     context.app = startApp({ sessionStore: context.memoryStore });
     return Promise.resolve();
   });
@@ -115,7 +115,7 @@ describe('GET /tags', () => {
     const ownerUser: UserId = createTestUserId(task.name);
     memoryStore.set(testSessionId, {
       cookie: new session.Cookie(),
-    });
+    } as TagtoolUserSessionData);
 
     await insertTag(ownerUser, testObjectId, 'some-tag');
     await insertTag(ownerUser, testObjectId, 'some-other-tag');
@@ -162,7 +162,7 @@ describe('GET /tags', () => {
     memoryStore.set(testSessionId, {
       cookie: new session.Cookie(),
       userId: testOwners[0],
-    } as SystemSessionDataType);
+    } as TagtoolUserSessionData);
 
     const response = await supertest(app)
       .get(`/tags/${testObjectId}`)
@@ -214,7 +214,7 @@ describe('GET /tags', () => {
       memoryStore.set(testSessionId, {
         cookie: new session.Cookie(),
         userId: testOwners[0],
-      } as SystemSessionDataType);
+      } as UserSessionData);
 
       const response = await supertest(app)
         .get(`/tags/${testObjectId}`)

@@ -1,15 +1,11 @@
 import { ParamsDictionary, Query } from 'express-serve-static-core';
+import { SystemHttpRequestType, SystemHttpResponseType, SystemResponseLocals } from '@tjsr/user-session-middleware';
+
+import { TagtoolUserSessionData } from './session.js';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  SessionStoreDataType,
-  SystemHttpRequestType,
-  SystemHttpResponseType,
-  SystemResponseLocals,
-} from '@tjsr/user-session-middleware';
 
-import { TagtoolSessionDataType } from './session.js';
-
-interface TagtoolSessionStoreDataType extends SessionStoreDataType {}
+// interface TagtoolSessionStoreDataType extends SessionStoreDataType {}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface TagtoolRequestProperties extends Record<string, any> {
@@ -17,7 +13,7 @@ interface TagtoolRequestProperties extends Record<string, any> {
   reportTagCounts: boolean;
 }
 
-export interface TagtoolResponseLocals extends SystemResponseLocals<TagtoolSessionStoreDataType> {}
+export interface TagtoolResponseLocals extends SystemResponseLocals<TagtoolUserSessionData> {}
 
 // export type TagtoolRequest = SystemHttpRequestType<TagtoolSessionDataType> & Partial<TagtoolRequestProperties>;
 export interface TagtoolRequest<
@@ -25,16 +21,8 @@ export interface TagtoolRequest<
   ResBody = any,
   ReqBody = any,
   ReqQuery extends Query = Query,
-> extends SystemHttpRequestType<
-      TagtoolSessionDataType,
-      TagtoolSessionStoreDataType,
-      P,
-      ResBody,
-      ReqBody,
-      ReqQuery,
-      TagtoolResponseLocals
-    >,
+> extends SystemHttpRequestType<TagtoolUserSessionData, P, ResBody, ReqBody, ReqQuery, TagtoolResponseLocals>,
     TagtoolRequestProperties {}
 
 export interface TagtoolResponse<ResBody = any>
-  extends SystemHttpResponseType<TagtoolSessionStoreDataType, ResBody, TagtoolResponseLocals> {}
+  extends SystemHttpResponseType<TagtoolUserSessionData, ResBody, TagtoolResponseLocals> {}
