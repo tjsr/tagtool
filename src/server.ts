@@ -1,4 +1,4 @@
-import { SessionHandlerError, userSessionMiddleware, validateHasUserId } from '@tjsr/user-session-middleware';
+import { SessionHandlerError, useUserSessionMiddleware, validateHasUserId } from '@tjsr/user-session-middleware';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
 import express, { NextFunction } from 'express';
 import { isProductionMode, loadEnv } from '@tjsr/simple-env-utils';
@@ -58,12 +58,10 @@ export const startApp = (config: TagtoolConfig): express.Express => {
     // going to store all user data in a session, we don't need to use cookie-parser.
     app.use(cookieParser());
   }
-  app.use(
-    userSessionMiddleware({
-      skipExposeHeaders: false,
-      store: config.sessionStore,
-    })
-  );
+  useUserSessionMiddleware(app, {
+    skipExposeHeaders: false,
+    store: config.sessionStore,
+  });
 
   // initialisePassportToExpressApp(app);
 
