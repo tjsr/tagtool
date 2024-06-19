@@ -13,8 +13,6 @@ import { insertTag } from '../database/insertTag.js';
 import { validateObjectId } from '../utils/validateObjectId.js';
 import { validateTag } from '../utils/validateTag.js';
 
-// import express, { NextFunction } from 'express';
-
 const checkObjectExists = async (id: ObjectId): Promise<boolean> => {
   // TODO: This is way too simple to be complete - must be something to do here.
   return Promise.resolve(id !== undefined);

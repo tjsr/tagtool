@@ -8,7 +8,6 @@ import { SESSION_ID_HEADER } from './apiUtils.js';
 import { TagResponse } from './apiTypes.js';
 import { TagtoolUserSessionData } from '../types/session.js';
 import { connectionDetails } from '../setup-tests.js';
-import { elideValues } from '../utils/elideValues.js';
 import express from 'express';
 import { insertTag } from '../database/insertTag.js';
 import { randomUUID } from 'crypto';
@@ -25,19 +24,7 @@ type TagTestContext = TaskContext & {
 };
 
 describe('GET /tags', () => {
-  beforeAll(
-    async () =>
-      new Promise((resolve, fail) => {
-        console.debug('connectionDetails for test run:', JSON.stringify(connectionDetails, elideValues));
-        const dbReadyPromise: Promise<void> = verifyDatabaseReady(connectionDetails);
-        return dbReadyPromise
-          .then(() => resolve())
-          .catch((err) => {
-            console.error('Failed connecting to database.');
-            return fail(err);
-          });
-      })
-  );
+  beforeAll(async () => verifyDatabaseReady(connectionDetails));
 
   beforeEach(async (context: TagTestContext) => {
     context.generatedUid = createRandomUserId();
