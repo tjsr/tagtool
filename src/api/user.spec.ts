@@ -18,7 +18,7 @@ describe('API tests for tags', () => {
       cookie: new session.Cookie(),
       userId: testUserId,
     } as TagtoolUserSessionData);
-    app = startApp({ sessionStore: memoryStore });
+    app = startApp({ sessionOptions: { store: memoryStore } });
     return;
   });
 

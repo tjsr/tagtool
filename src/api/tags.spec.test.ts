@@ -38,7 +38,7 @@ describe('GET /tags', () => {
     context.memoryStore.set(testSessionId, {
       cookie: new session.Cookie(),
     } as TagtoolUserSessionData);
-    context.app = startApp({ sessionStore: context.memoryStore });
+    context.app = startApp({ sessionOptions: { store: context.memoryStore } });
     return Promise.resolve();
   });
 
@@ -170,7 +170,7 @@ describe('GET /tags', () => {
     async ({ memoryStore, task }) => {
       const app = startApp({
         enableTagCount: false,
-        sessionStore: memoryStore,
+        sessionOptions: { store: memoryStore },
       });
 
       const testSessionId = createTestSessionId(task.name);

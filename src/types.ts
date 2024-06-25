@@ -1,4 +1,4 @@
-import session from 'express-session';
+import { ExpressServerConfig } from './types/expressConfig.js';
 import { uuid5 } from '@tjsr/user-session-middleware';
 
 export type UserId = uuid5;
@@ -12,10 +12,8 @@ export interface Tag {
   tag: string;
 }
 
-export interface TagtoolConfig {
+export interface TagtoolConfig extends ExpressServerConfig {
   enableTagCount?: boolean;
-  sessionStore?: session.Store;
 }
-
 
 export type { EmailAddress, IPAddress, uuid, uuid4, uuid5 } from '@tjsr/user-session-middleware';

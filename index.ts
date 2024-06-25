@@ -1,8 +1,9 @@
 import { DEFAULT_HTTP_PORT, startApp } from './src/server.js';
+import { UserSessionOptions, mysqlSessionStore } from '@tjsr/user-session-middleware';
 import { intEnv, loadEnv, requireEnv } from '@tjsr/simple-env-utils';
 
+import { CorsOptions } from 'cors';
 import express from 'express';
-import { mysqlSessionStore } from '@tjsr/user-session-middleware';
 
 console.log(`Starting with NODE_ENV ${process.env['NODE_ENV']}`);
 
@@ -14,7 +15,20 @@ requireEnv('HTTP_PORT');
 
 const HTTP_PORT: number = intEnv('HTTP_PORT', DEFAULT_HTTP_PORT);
 
-const app: express.Express = startApp({ sessionStore: mysqlSessionStore });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const corsOptions: CorsOptions | any = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Expose-Headers': '*',
+  optionsSuccessStatus: 200,
+  origin: '*',
+};
+
+const sessionOptions: Partial<UserSessionOptions> = {
+  skipExposeHeaders: false,
+  store: mysqlSessionStore,
+};
+
+const app: express.Express = startApp({ cors: corsOptions, sessionOptions });
 app.listen(HTTP_PORT, () => {
   console.log(`Listening on port ${HTTP_PORT}`);
 });

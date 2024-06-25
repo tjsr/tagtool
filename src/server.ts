@@ -1,74 +1,26 @@
-import {
-  SessionHandlerError,
-  UserSessionOptions,
-  useUserSessionMiddleware,
-  validateHasUserId,
-} from '@tjsr/user-session-middleware';
+import { SessionHandlerError, useUserSessionMiddleware, validateHasUserId } from '@tjsr/user-session-middleware';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
-import express, { NextFunction } from 'express';
-import { isProductionMode, loadEnv } from '@tjsr/simple-env-utils';
 
+import { ExpressServerHelper } from './utils/expressHelper.js';
 import { TagtoolConfig } from './types.js';
 import { TagtoolRequest } from './types/request.js';
 import { asyncHandlerWrap } from './utils/asyncHandlerWrap.js';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
+import express from 'express';
 import { getUser } from './api/user.js';
-import morgan from 'morgan';
-import requestIp from 'request-ip';
-import session from 'express-session';
+import { loadEnv } from '@tjsr/simple-env-utils';
 
 export const DEFAULT_HTTP_PORT = 8242;
-const enableCookies = true;
 
 loadEnv();
 
-const morganLog = morgan('common');
 // process.env.PRODUCTION =='true' ? 'common' : 'dev'
 
-const corsOptions = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Expose-Headers': '*',
-  optionsSuccessStatus: 200,
-  origin: '*',
-};
+export const startApp = (config: Partial<TagtoolConfig>): express.Express => {
+  const expressHelper = new ExpressServerHelper(config);
 
-export const startApp = (config: TagtoolConfig): express.Express => {
-  if (config === undefined) {
-    throw new Error('No configuration provided to startApp.');
-  }
-  if (config.sessionStore === undefined && isProductionMode()) {
-    throw new Error('MemoryStore is not permitted for use in production mode.');
-  } else if (config.sessionStore === undefined) {
-    config.sessionStore = new session.MemoryStore();
-  }
+  const app: express.Express = expressHelper.init().app();
 
-  const app: express.Express = express();
-  if (process.env['USE_LOGGING'] !== 'false') {
-    app.use(morganLog);
-  }
-  app.use(cors(corsOptions));
-  app.use(requestIp.mw());
-  app.set('trust proxy', true);
-
-  const accessControlHeaders: express.RequestHandler = (_request, response, next: NextFunction): void => {
-    response.header('Access-Control-Expose-Headers', '*');
-    next();
-  };
-
-  app.use(accessControlHeaders);
-
-  if (enableCookies) {
-    // TODO: express-session no longer needs cookie parser, so if the app isn't using cookies, eg we're
-    // going to store all user data in a session, we don't need to use cookie-parser.
-    app.use(cookieParser());
-  }
-
-  const sessionOptions: Partial<UserSessionOptions> = {
-    skipExposeHeaders: false,
-    store: config.sessionStore,
-  };
-  useUserSessionMiddleware(app, sessionOptions);
+  useUserSessionMiddleware(app, config.sessionOptions);
 
   // initialisePassportToExpressApp(app);
 
