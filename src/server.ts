@@ -1,4 +1,4 @@
-import { SessionHandlerError, useUserSessionMiddleware, validateHasUserId } from '@tjsr/user-session-middleware';
+import { SessionHandlerError, validateHasUserId } from '@tjsr/user-session-middleware';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
 
 import { ExpressServerHelper } from './utils/expressHelper.js';
@@ -13,40 +13,11 @@ export const DEFAULT_HTTP_PORT = 8242;
 
 loadEnv();
 
-// process.env.PRODUCTION =='true' ? 'common' : 'dev'
-
 export const startApp = (config: Partial<TagtoolConfig>): express.Express => {
   const expressHelper = new ExpressServerHelper(config);
 
   const app: express.Express = expressHelper.init().app();
 
-  useUserSessionMiddleware(app, config.sessionOptions);
-
-  // initialisePassportToExpressApp(app);
-
-  app.use(
-    express.urlencoded({
-      extended: true,
-    })
-  );
-  app.use(express.json());
-
-  // const _validateHasUserIdFunc: RequestHandler & UserSessionMiddlewareRequestHandler = validateHasUserId;
-  // const _getUserFunc: RequestHandler & UserSessionMiddlewareRequestHandler = getUser;
-
-  // TODO: Add session endpoint block in USM.
-  // app.use(userSessionEndpoints);
-
-  // TODO: Migrate /session endpoint to USM.
-  // app.get('/session', apiSession);
-
-  // TODO: Migrate /login endpoint to USM.
-  // app.post('/login', login);
-
-  // TODO: Migrate /logout endpoint to USM.
-  // app.get('/logout', logout);
-  // TODO: Migrate /logout endpoint to USM.
-  // app.post('/logout', logout);
   app.get(
     '/tags/:objectId',
     validateHasUserId as express.RequestHandler,
@@ -74,35 +45,6 @@ export const startApp = (config: Partial<TagtoolConfig>): express.Express => {
     response.send({});
     response.end();
   });
-
-  // type TestTagtoolRequest =
-  //   | SystemHttpRequestType<TagtoolSessionDataType>
-  //   | (SystemHttpRequestType<TagtoolSessionDataType> & {
-  //       reportTagCounts: boolean;
-  //     })
-  //   | {
-  //       reportTagCounts: boolean;
-  //     };
-
-  // type TestTagtoolRequest2 = SystemHttpRequestType<TagtoolSessionDataType> & {
-  //   reportTagCounts: boolean;
-  // };
-
-  // type TestTagtoolRequest3 =
-  //   | SystemHttpRequestType<TagtoolSessionDataType>
-  //   | {
-  //       reportTagCounts: boolean;
-  //     };
-
-  // type TestTagtoolRequest4 = SystemHttpRequestType<TagtoolSessionDataType> &
-  //   (SystemHttpRequestType<TagtoolSessionDataType> & {
-  //     reportTagCounts: boolean;
-  //   });
-
-  // type TestTagtoolRequest5 = SystemHttpRequestType<TagtoolSessionDataType> &
-  //   Partial<{
-  //     reportTagCounts: boolean;
-  //   }>;
 
   app.use(
     (
