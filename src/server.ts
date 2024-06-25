@@ -20,26 +20,21 @@ export const startApp = (config: Partial<TagtoolConfig>): express.Express => {
 
   app.get(
     '/tags/:objectId',
-    validateHasUserId as express.RequestHandler,
+    validateHasUserId,
     validateTags,
-    asyncHandlerWrap(validateObjectExists) as express.RequestHandler,
-    asyncHandlerWrap(getTags) as express.RequestHandler
+    asyncHandlerWrap(validateObjectExists),
+    asyncHandlerWrap(getTags)
   );
-  app.post(
-    '/tags/:objectId',
-    validateHasUserId as express.RequestHandler,
-    validateTags,
-    asyncHandlerWrap(addTag) as express.RequestHandler
-  );
+  app.post('/tags/:objectId', validateHasUserId, validateTags, asyncHandlerWrap(addTag));
   app.delete(
     '/tags/:objectId',
-    validateHasUserId as express.RequestHandler,
+    validateHasUserId,
     validateTags,
-    asyncHandlerWrap(validateObjectExists) as express.RequestHandler,
-    asyncHandlerWrap(deleteTags) as express.RequestHandler
+    asyncHandlerWrap(validateObjectExists),
+    asyncHandlerWrap(deleteTags)
   );
-  app.get('/user', getUser as express.RequestHandler);
-  app.get('/user/:userId', getUser as express.RequestHandler);
+  app.get('/user', getUser);
+  app.get('/user/:userId', getUser);
 
   app.get('/', (_request, response: express.Response) => {
     response.send({});
@@ -49,18 +44,9 @@ export const startApp = (config: Partial<TagtoolConfig>): express.Express => {
   app.use(
     (
       error: Error | SessionHandlerError,
-      // request: TagtoolRequest,
-      // request: TagtoolRequest,
-      // request: Request, // SystemHttpRequestType<TagtoolSessionDataType>,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      request: any,
-      // : TagtoolRequest<ParamsDictionary, any, any, ParsedQs>, // SystemHttpRequestType<TagtoolSessionDataType>,
-      // request: SystemHttpRequestType<UserSessionData>,
-      // request: SystemHttpRequestType<TagtoolSessionDataType>,
-      // _response: SystemHttpResponseType<SessionStoreDataType>,
-      // _response: SystemHttpResponseType<TagtoolSessionStoreDataType>,
+      request: express.Request,
       response: express.Response,
-      // _response: TagtoolResponse,
       next: express.NextFunction
     ): void => {
       const tagReq: TagtoolRequest = request as TagtoolRequest;
@@ -83,8 +69,6 @@ export const startApp = (config: Partial<TagtoolConfig>): express.Express => {
       } else {
         console.error(error, error.stack);
       }
-      // res.send();
-      // res.end();
 
       next(error);
     }
