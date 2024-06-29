@@ -34,7 +34,8 @@
     "db:upgrade:deploy": "prisma migrate deploy",
     "docker:build:old": "docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool -f Dockerfile .",
     "docker:build:dbmigrate:old": "docker build --secret id=github,env=TAGTOOL_GITHUB_PAT -t tagtool-dbmigrate -f Dockerfile.dbmigrate .",
-    "disable:postinstall": "npm run link"
+    "disable:postinstall": "npm run link",
+    "postinstall": "linkteam @tjsr/user-session-middleware,@tjsr/mysql-pool-utils,@tjsr/simple-env-utils,@tjsr/eslint-config"
   },
   "repository": {
     "type": "git",
@@ -89,6 +90,7 @@
     "eslint-plugin-prettier": "^5.1.3",
     "eslint-plugin-react-hooks": "^4.6.0",
     "express-session": "^1.18.0",
+    "linkteam": "^0.0.10",
     "minimatch": "^9.0.4",
     "mock-session": "^0.0.5",
     "openapi-typescript": "^6.7.6",
