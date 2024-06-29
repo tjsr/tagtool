@@ -67,7 +67,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^8.57.0",
-    "@prisma/client": "^5.15.1",
+    "@prisma/client": "^5.16.1",
     "@tjsr/eslint-config": "github:tjsr/eslint-config#main",
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
@@ -92,7 +92,7 @@
     "openapi-typescript": "^6.7.6",
     "prettier": "^3.3.2",
     "prettier-plugin-sort-members": "^0.1.2",
-    "prisma": "^5.15.1",
+    "prisma": "^5.16.1",
     "rimraf": "^5.0.7",
     "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
