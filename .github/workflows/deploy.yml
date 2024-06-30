@@ -36,7 +36,8 @@ jobs:
         host: ${{ secrets.DEPLOYMENT_HOST }}
         username: ${{ secrets.DEPLOYMENT_USER }}
         key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
-        source: prisma/*
+        source: prisma
+        strip_components: 1
         target: /home/ec2-user/tagtool/migrator/${{ github.sha }}
 
   pull:
