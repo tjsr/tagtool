@@ -60,6 +60,15 @@ jobs:
         container_name: ${{ env.CONTAINER_NAME }}
         remove_container: true
         remove_image: true
+
+    - name: Copy Prisma migration files to remote
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.DEPLOYMENT_HOST }}
+        username: ${{ secrets.DEPLOYMENT_USER }}
+        key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+        source: prisma
+        target: /home/ec2-user/tagtool/migrator/${{ github.sha }}
   
     - name: Apply DB migration script
       uses: appleboy/ssh-action@v1.0.3
@@ -69,7 +78,9 @@ jobs:
         key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
         envs: DB_IMAGE_NAME,PRISMA_DATABASE_URL
         script: |
-          docker run -e PRISMA_DATABASE_URL=$PRISMA_DATABASE_URL --rm --name tagtool-migrate -t $DB_IMAGE_NAME
+          docker run -e PRISMA_DATABASE_URL=$PRISMA_DATABASE_URL \
+          -v /home/ec2-user/tagtool/migrator/${{ github.sha }}:/opt/migrator/prisma \
+          --rm --name tagtool-migrate -t $DB_IMAGE_NAME
 
     - name: Re-start API container
       uses: appleboy/ssh-action@v1.0.3
@@ -79,6 +90,15 @@ jobs:
         key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
         envs: IMAGE_NAME,CONTAINER_NAME,API_PORT
         script: docker run --name $CONTAINER_NAME --restart=always -p $API_PORT:8242 --env-file=/home/ec2-user/tagtool/.env.${{ github.event.inputs.environment }} -d -t $IMAGE_NAME
+
+    - name: Symlink current instance dir to migration directory used.
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEPLOYMENT_HOST }}
+        username: ${{ secrets.DEPLOYMENT_USER }}
+        key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+        script: |
+          ln -sfn /home/ec2-user/tagtool/migrator/${{ github.sha }} /home/ec2-user/tagtool/migrator/${{ github.event.inputs.environment }}
 
     - name: Tag the API image as being deployed
       run: |
