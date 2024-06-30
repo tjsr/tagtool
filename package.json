@@ -19,7 +19,7 @@
     "build:clean": "npm run clean && vite build && tsc",
     "predocker:": "npx tsx bin/check-environment.ts TAGTOOL_GITHUB_PAT",
     "docker:build": "tsx bin/docker-build-with-secret.ts tagtool Dockerfile",
-    "docker:build:dbmigrate": "npx tsx bin/docker-build-with-secret.ts tagtool-dbmigrate Dockerfile.dbmigrate",
+    "docker:build:dbmigrate": "docker build -t dbmigrate -f Dockerfile.dbmigrate .",
     "docker:test": "npm run docker:build && docker run --rm --name tagtool-test -it tagtool npm i && npm test",
     "link": "linkteam @tjsr/user-session-middleware,@tjsr/simple-env-utils,@tjsr/mysql-pool-utils,@tjsr/eslint-config",
     "lint": "eslint --config eslint.config.mjs src/*.ts",
