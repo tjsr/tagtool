@@ -9,12 +9,14 @@ services:
         ARG MYSQL_VERSION 5.7
         FROM mysql:${MYSQL_VERSION:-5.7} as mysql
 
-        RUN yum install -y -q gettext
+        RUN --mount=type=cache,target=/var/cache/yum yum install -y -q gettext
 
         COPY scripts/api-db-users.sh /docker-entrypoint-initdb.d/010-api-db-users.sh
         COPY scripts/privs.api.template /docker-entrypoint-initdb.d/privs.api.template
         COPY scripts/030-sqlmode.sql /docker-entrypoint-initdb.d/030-sqlmode.sql
         COPY scripts/my.cnf /etc/mysql/my.cnf
+
+        RUN chmod 700 /docker-entrypoint-initdb.d/010-api-db-users.sh
     env_file:
     - ./.env.test
     ports:
@@ -26,27 +28,13 @@ services:
       retries: 5
       start_period: 30s
   cidbmig:
-    container_name: tagtool_dbmigration
-    build:
-      args:
-        NODE_VERSION: '20.14.0'
-        ALPINE_VERSION: '3.20'
-        NPM_VERSION: '10.8.1'
-      context: .
-      dockerfile: Dockerfile.dbmigrate
-      secrets:
-      - github
+    container_name: tagtool_prismamig
+    volumes:
+    - ./prisma:/opt/migrator/prisma
+    image: public.ecr.aws/tjsrowe/prisma-generic:5.16.1
     env_file:
       - path: ./.env.test
         required: true
-    # environment:
-    # - PRISMA_DATABASE_URL=mysql://testuser:testpassword@tagtool_mysqldb:3306/testdb
-    # - PRISMA_DATABASE_URL="mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@tagtool_mysqldb:${MYSQL_PORT}/${MYSQL_DATABASE}"
     depends_on:
       mysqldb:
         condition: service_healthy
-
-secrets:
-  github:
-    environment: TAGTOOL_GITHUB_PAT
-    # file: TAGTOOL_GITHUB_PAT

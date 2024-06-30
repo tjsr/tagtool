@@ -1,22 +1,3 @@
-ARG NODE_VERSION=20.13.1
-ARG ALPINE_VERSION=3.19
-ARG NPM_VERSION=10.8.0
-FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} as tagtool-dbmigrate
+FROM public.ecr.aws/tjsrowe/prisma-generic:5.16.1 as tagtool-migrate
 
-RUN --mount=type=cache,target=/root/.npm mkdir /opt/tagtool && \
-  npm config set fund false --location=global && \
-  npm config set update-notifier false --location=global
-
-COPY [ "package.json", "package-lock.json", ".npmrc", "/opt/tagtool/" ]
-COPY prisma /opt/tagtool
-
-WORKDIR /opt/tagtool
-RUN --mount=type=secret,id=github,target=/root/.npm/github_pat if [ ! -s /root/.npm/github_pat ]; then echo "No github_pat secret found" && cat /root/.npm/github_pat && exit 127; fi
-
-RUN --mount=type=secret,id=github,target=/root/.npm/github_pat --mount=type=cache,target=/root/.npm \
-  echo "//npm.pkg.github.com/:_authToken=$(cat /root/.npm/github_pat)" >> /root/.npmrc && \
-  echo "@tjsr:registry=https://npm.pkg.github.com/" >> /root/.npmrc && \
-  npm ci && \
-  rm -f /root/.npmrc
-
-CMD ["npm", "run", "db:upgrade:deploy"]
+COPY prisma /opt/migrator

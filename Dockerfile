@@ -1,7 +1,7 @@
 ARG NODE_VERSION=20.15.0
 ARG ALPINE_VERSION=3.20
 ARG NPM_VERSION=10.8.1
-FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} as tagtool-build-preflight
+FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} AS tagtool-build-preflight
 
 RUN --mount=type=cache,target=/root/.npm mkdir /opt/tagtool && \
   npm config set fund false --location=global && \
@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/root/.npm mkdir /opt/tagtool && \
 
 WORKDIR /opt/tagtool
 
-FROM tagtool-build-preflight as tagtool-build
+FROM tagtool-build-preflight AS tagtool-build
 
 # First, files that are unlikely to change frequently.
 COPY [ "tsconfig.json", ".npmrc", "babel.config.js", ".prettierrc.json", "vite.config.ts", "index.ts", "index.html", "eslint.config.mjs", "/opt/tagtool/" ]
@@ -24,7 +24,7 @@ RUN --mount=type=secret,id=github,target=/root/.npm/github_pat --mount=type=cach
   npm run build && \
   rm -f /root/.npmrc
 
-FROM tagtool-build-preflight as tagtool
+FROM tagtool-build-preflight AS tagtool
 
 COPY package*.json /opt/tagtool
 COPY .npmrc /opt/tagtool
