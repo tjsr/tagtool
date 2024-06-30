@@ -52,6 +52,7 @@ jobs:
   
     - name: Stop existing running container
       uses: tjsr/remote_docker_stop@main
+      continue-on-error: true
       with:
         remote_docker_host: ${{ secrets.DEPLOYMENT_HOST }}
         ssh_private_key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
