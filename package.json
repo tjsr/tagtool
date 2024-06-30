@@ -17,7 +17,7 @@
     "build": "vite build && tsc",
     "build:api": "npx openapi-typescript ./src/api/schema/api.yml -o ./src/api/schema/api.d.ts",
     "build:clean": "npm run clean && vite build && tsc",
-    "predocker:": "npx tsx bin/check-environment.ts TAGTOOL_GITHUB_PAT",
+    "predocker:": "tsx bin/check-environment.ts TAGTOOL_GITHUB_PAT",
     "docker:build": "tsx bin/docker-build-with-secret.ts tagtool Dockerfile",
     "docker:build:dbmigrate": "docker build -t dbmigrate -f Dockerfile.dbmigrate .",
     "docker:test": "npm run docker:build && docker run --rm --name tagtool-test -it tagtool npm i && npm test",
