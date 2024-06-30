@@ -19,17 +19,17 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     environment:
       name: ${{  inputs.environment }}
-      url: https://tagtool.dev.pinpare.com
+      url: "https://tagtool.${{ github.event.inputs.environment }}.pinpare.com"
     env:
-      IMAGE_TAG: ${{ github.sha }}
-      DB_IMAGE_TAG: dbmigrate-${{ github.sha }}
+      IMAGE_TAG: tagtool:${{ github.event.inputs.environment }}
       IMAGE_NAME: tagtool:${{ github.sha }}
-      DB_IMAGE_NAME: tagtool:dbmigrate-${{ github.sha }}
+      DB_IMAGE_NAME: prisma-generic:5.16.1
       REGISTRY_ALIAS: tjsrowe
       PRISMA_DATABASE_URL: ${{ secrets.PRISMA_DATABASE_URL }}
       CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
       API_PORT: ${{ vars.API_PORT }}
     steps:
+
     - name: Pull DB migration deploy image on remote.
       uses: tjsr/remote_docker_pull@main
       with:
@@ -70,7 +70,7 @@ jobs:
         envs: DB_IMAGE_NAME,PRISMA_DATABASE_URL
         script: |
           docker run -e PRISMA_DATABASE_URL=$PRISMA_DATABASE_URL --rm --name tagtool-migrate -t $DB_IMAGE_NAME
-        
+
     - name: Re-start API container
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -78,4 +78,9 @@ jobs:
         username: ${{ secrets.DEPLOYMENT_USER }}
         key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
         envs: IMAGE_NAME,CONTAINER_NAME,API_PORT
-        script: docker run --name $CONTAINER_NAME --restart=always -p $API_PORT:8242 --env-file=/home/ec2-user/tagtool/.env.dev -d -t $IMAGE_NAME
+        script: docker run --name $CONTAINER_NAME --restart=always -p $API_PORT:8242 --env-file=/home/ec2-user/tagtool/.env.${{ github.event.inputs.environment }} -d -t $IMAGE_NAME
+
+    - name: Tag the API image as being deployed
+      run: |
+        docker tag ${{ env.IMAGE_NAME }} public.ecr.aws/${{ env.REGISTRY_ALIAS }}/${{ env.IMAGE_TAG }}
+        docker push public.ecr.aws/${{ env.REGISTRY_ALIAS }}/${{ env.IMAGE_TAG }}
