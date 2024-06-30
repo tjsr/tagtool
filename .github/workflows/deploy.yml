@@ -151,6 +151,17 @@ jobs:
         script: |
           ln -sfn /home/ec2-user/tagtool/migrator/${{ github.sha }} /home/ec2-user/tagtool/migrator/${{ github.event.inputs.environment }}
 
+    - name: Login to Amazon ECR Public
+      id: login-ecr-public
+      if: ${{ github.actor != 'dependabot[bot]' }}
+      uses: aws-actions/amazon-ecr-login@v2
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ECR_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ECR_SECRET_ACCESS_KEY }}
+        AWS_REGION: us-east-1
+      with:
+        registry-type: public
+
     - name: Tag the API image as being deployed
       run: |
         docker pull public.ecr.aws/${{ env.REGISTRY_ALIAS }}/${{ env.IMAGE_NAME }}
