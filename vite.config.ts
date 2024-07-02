@@ -48,5 +48,6 @@ export default defineConfig({
       DOTENV_FLOW_PATH: searchUpwardsForEnvFile(),
       DOTENV_FLOW_PATTERN: '.env.test',
     },
+    globals: true,
   },
 });
