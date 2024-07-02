@@ -128,19 +128,15 @@ describe('GET /tags', () => {
     const testOwners: UserId[] = [1, 2, 3, 4].map((i) => createTestUserId(task.name + '-' + i));
     testOwners.forEach(async (ownerUser: UserId, index: number) => {
       if (index < 1) {
-        console.log(`Added ${index + 1} as some-tag-1`);
         promises.push(insertTag(ownerUser, testObjectId, 'some-tag-1'));
       }
       if (index < 2) {
-        console.log(`Added ${index + 1} as some-tag-2`);
         promises.push(insertTag(ownerUser, testObjectId, 'some-tag-2'));
       }
       if (index < 3) {
-        console.log(`Added ${index + 1} as some-tag-3`);
         promises.push(insertTag(ownerUser, testObjectId, 'some-tag-3'));
       }
       if (index < 4) {
-        console.log(`Added ${index + 1} as some-tag-4`);
         promises.push(insertTag(ownerUser, testObjectId, 'some-tag-4'));
       }
     });
@@ -180,19 +176,15 @@ describe('GET /tags', () => {
       const testOwners: UserId[] = [1, 2, 3, 4].map((i) => createTestUserId(task.name + '-' + i));
       testOwners.forEach(async (ownerUser: UserId, index: number) => {
         if (index < 1) {
-          console.log(`Added ${index + 1} as some-tag-1`);
           promises.push(insertTag(ownerUser, testObjectId, 'some-tag-1'));
         }
         if (index < 2) {
-          console.log(`Added ${index + 1} as some-tag-2`);
           promises.push(insertTag(ownerUser, testObjectId, 'some-tag-2'));
         }
         if (index < 3) {
-          console.log(`Added ${index + 1} as some-tag-3`);
           promises.push(insertTag(ownerUser, testObjectId, 'some-tag-3'));
         }
         if (index < 4) {
-          console.log(`Added ${index + 1} as some-tag-4`);
           promises.push(insertTag(ownerUser, testObjectId, 'some-tag-4'));
         }
       });
