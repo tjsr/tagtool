@@ -1,5 +1,4 @@
 import { ObjectId, UserId } from '../types.js';
-import { TaskContext, afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { UserSessionData, createRandomId, createRandomUserId } from '@tjsr/user-session-middleware';
 import { closeConnectionPool, verifyDatabaseReady } from '@tjsr/mysql-pool-utils';
 import { createTestObjectId, createTestSessionId, createTestUserId } from '../testUtils.js';
@@ -7,6 +6,7 @@ import { createTestObjectId, createTestSessionId, createTestUserId } from '../te
 import { SESSION_ID_HEADER } from './apiUtils.js';
 import { TagResponse } from './apiTypes.js';
 import { TagtoolUserSessionData } from '../types/session.js';
+import { TaskContext } from 'vitest';
 import { connectionDetails } from '../setup-tests.js';
 import express from 'express';
 import { insertTag } from '../database/insertTag.js';
