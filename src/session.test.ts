@@ -31,7 +31,7 @@ describe('retrieveSessionData', () => {
         .get('/')
         .set(SESSION_ID_HEADER, 'abcd-2345')
         .set('Content-Type', 'application/json')
-        .expect(401, (err, res) => {
+        .expect(401, (_err, res) => {
           expect(res.status).toBe(401);
           done();
         });
