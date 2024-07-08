@@ -83,7 +83,9 @@ export class ExpressServerHelper {
       if (handler) {
         this._app.use(handler);
       }
-      console.log('Successfully loaded middleware', pluginNameForIndex);
+      if (!isProductionMode()) {
+        console.log('Successfully loaded middleware', pluginNameForIndex);
+      }
     });
     return this;
   }
