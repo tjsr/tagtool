@@ -1,5 +1,5 @@
 import { DEFAULT_HTTP_PORT, startApp } from './src/server.js';
-import { UserSessionOptions, mysqlSessionStore } from '@tjsr/user-session-middleware';
+import { UserSessionOptions, getMysqlSessionStore } from '@tjsr/user-session-middleware';
 import { intEnv, loadEnv, requireEnv } from '@tjsr/simple-env-utils';
 
 import { CorsOptions } from 'cors';
@@ -25,7 +25,7 @@ const corsOptions: CorsOptions | any = {
 
 const sessionOptions: Partial<UserSessionOptions> = {
   skipExposeHeaders: false,
-  store: mysqlSessionStore,
+  store: getMysqlSessionStore(),
 };
 
 const app: express.Express = startApp({ cors: corsOptions, sessionOptions });

@@ -7,6 +7,7 @@ dist/
 dbcreate.sql
 *_GITHUB_PAT
 vitest.workspace.js
+vitest.config.ts.timestamp-*
 
 # Various system env files - permit test and dev, but exclude .local, production and staging configs
 .env.*
