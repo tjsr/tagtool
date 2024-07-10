@@ -1,3 +1,5 @@
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+
 import { SESSION_ID_HEADER } from './api/apiUtils.js';
 import { connectionDetails } from './setup-tests.js';
 import express from 'express';

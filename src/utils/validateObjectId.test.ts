@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest';
 import { validateObjectId } from './validateObjectId.js';
 
 describe('validateObjectId', () => {

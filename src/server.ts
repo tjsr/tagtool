@@ -1,17 +1,16 @@
 import { SessionHandlerError, validateHasUserId } from '@tjsr/user-session-middleware';
 import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
 
-import { ExpressServerHelper } from './utils/expressHelper.js';
+import { ExpressServerHelper } from '@tjsr/express-server-helper';
 import { TagtoolConfig } from './types.js';
 import { TagtoolRequest } from './types/request.js';
 import { asyncHandlerWrap } from './utils/asyncHandlerWrap.js';
 import express from 'express';
 import { getUser } from './api/user.js';
-import { loadEnv } from '@tjsr/simple-env-utils';
+
+// import { ExpressServerHelper } from './utils/expressHelper.js';
 
 export const DEFAULT_HTTP_PORT = 8242;
-
-loadEnv();
 
 export const startApp = (config: Partial<TagtoolConfig>): express.Express => {
   const expressHelper = new ExpressServerHelper(config);

@@ -5,6 +5,10 @@ import { setUserIdNamespace } from '@tjsr/user-session-middleware';
 import { v4 as uuidv4 } from 'uuid';
 
 loadEnv();
+console.log(
+  'Env vars:',
+  ['DOTENV_FLOW_PATH', 'DOTENV_FLOW_PATTERN', 'DOTENV_DEBUG'].map((key) => `${key}=${process.env[key]}`)
+);
 
 process.env['USE_LOGGING'] = 'false';
 
