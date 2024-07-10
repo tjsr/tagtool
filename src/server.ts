@@ -8,8 +8,6 @@ import { asyncHandlerWrap } from './utils/asyncHandlerWrap.js';
 import express from 'express';
 import { getUser } from './api/user.js';
 
-// import { ExpressServerHelper } from './utils/expressHelper.js';
-
 export const DEFAULT_HTTP_PORT = 8242;
 
 export const startApp = (config: Partial<TagtoolConfig>): express.Express => {
