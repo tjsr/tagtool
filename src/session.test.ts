@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { SESSION_ID_HEADER } from './api/apiUtils.js';
 import { connectionDetails } from './setup-tests.js';
 import express from 'express';
+import { randomUUID } from 'crypto';
 import session from 'express-session';
 import { startApp } from './server.js';
 import supertest from 'supertest';
@@ -15,7 +16,7 @@ describe('retrieveSessionData', () => {
   beforeAll(async () => {
     await verifyDatabaseReady(connectionDetails);
     realAppMemoryStore = new session.MemoryStore();
-    realApp = startApp({ sessionOptions: { store: realAppMemoryStore } });
+    realApp = startApp({ sessionOptions: { store: realAppMemoryStore, userIdNamespace: randomUUID() } });
   });
 
   // beforeAll(() => {

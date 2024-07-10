@@ -38,7 +38,7 @@ describe('GET /tags', () => {
     context.memoryStore.set(testSessionId, {
       cookie: new session.Cookie(),
     } as TagtoolUserSessionData);
-    context.app = startApp({ sessionOptions: { store: context.memoryStore } });
+    context.app = startApp({ sessionOptions: { store: context.memoryStore, userIdNamespace: randomUUID() } });
     return Promise.resolve();
   });
 
