@@ -31,6 +31,8 @@ const child = spawn('docker', [
   tag,
   '--secret',
   'id=github,env=TAGTOOL_GITHUB_PAT',
+  '--cache-from',
+  'tjsr/tagtool:latest',
   '--file',
   dockerfile,
   '.',

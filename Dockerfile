@@ -1,11 +1,9 @@
-ARG NODE_VERSION=20.15.0
+ARG NODE_VERSION=20.15.1
 ARG ALPINE_VERSION=3.20
-ARG NPM_VERSION=10.8.1
+ARG NPM_VERSION=10.8.2
 FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} AS tagtool-build-preflight
 
-RUN --mount=type=cache,target=/root/.npm mkdir /opt/tagtool && \
-  npm config set fund false --location=global && \
-  npm config set update-notifier false --location=global
+RUN mkdir /opt/tagtool
 
 WORKDIR /opt/tagtool
 
@@ -24,7 +22,7 @@ RUN --mount=type=secret,id=github,target=/root/.npm/github_pat --mount=type=cach
   npm run build && \
   rm -f /root/.npmrc
 
-FROM tagtool-build-preflight AS tagtool
+FROM tagtool-build-preflight AS tagtool-runtimes
 
 COPY package*.json /opt/tagtool
 COPY .npmrc /opt/tagtool
@@ -34,8 +32,11 @@ RUN --mount=type=secret,id=github,target=/root/.npm/github_pat --mount=type=cach
   npm ci --omit=dev --no-fund && \
   rm -f /root/.npmrc
 
-COPY --from=tagtool-build /opt/tagtool/dist /opt/tagtool/dist
-WORKDIR /opt/tagtool/dist
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION}
+COPY --from=tagtool-build /opt/tagtool/dist /opt/tagtool
+COPY package.json /opt/tagtool
+COPY --from=tagtool-runtimes /opt/tagtool/node_modules /opt/tagtool/node_modules
+WORKDIR /opt/tagtool
 
 EXPOSE 8242
 
