@@ -3,9 +3,9 @@ ARG ALPINE_VERSION=3.20
 ARG NPM_VERSION=10.8.2
 FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} AS tagtool-build-preflight
 
-RUN mkdir /opt/tagtool
-
 WORKDIR /opt/tagtool
+
+RUN mkdir /opt/tagtool
 
 FROM tagtool-build-preflight AS tagtool-build
 
