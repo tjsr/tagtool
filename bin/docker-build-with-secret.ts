@@ -9,8 +9,6 @@ if (process.env['TAGTOOL_GITHUB_PAT'] === undefined) {
 
 const appArg = 2;
 
-console.log(`process.argv: ${process.argv}`);
-
 if (process.argv.length <= appArg || process.argv[appArg] === undefined) {
   console.error('tag is not set');
   process.exit(1);
@@ -29,7 +27,6 @@ const child = spawn('docker', [
   'build',
   '-t',
   tag,
-  '--pull',
   '--secret',
   'id=github,env=TAGTOOL_GITHUB_PAT',
   '--cache-from',
