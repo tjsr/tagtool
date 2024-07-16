@@ -1,7 +1,7 @@
 name: Build Tagtool
 run-name: ${{ github.actor }} Running Tagtool build.
 on: [push]
-  braches_ignore: [workflow/dependency*]
+  braches-ignore: [workflow/dependency*]
 jobs:
   build-tagtool:
     runs-on: ubuntu-latest
