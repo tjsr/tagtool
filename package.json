@@ -94,7 +94,7 @@
     "openapi-typescript": "^6.7.6",
     "prettier": "^3.3.2",
     "prettier-plugin-sort-members": "^0.1.2",
-    "prisma": "^5.16.1",
+    "prisma": "^5.16.2",
     "rimraf": "^6.0.0",
     "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
