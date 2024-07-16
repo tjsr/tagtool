@@ -11,7 +11,7 @@ jobs:
       API_IMAGE: tjsrowe/tagtool:${{ github.sha }}
 
     steps:
-    - name: Check out repositofy code
+    - name: Check out repository code
       uses: actions/checkout@v4
 
     - name: Set up Docker Buildx
