@@ -1,0 +1,39 @@
+name: Update dependency
+run-name: ${{ github.actor }} Update an npm dependency
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        type: choice
+        description: 'Environment ID'
+        required: true
+        default: 'dev'
+        options:
+        - '@tjsr/user-session-middleware'
+        - '@tjsr/mysql-pool-utils'
+        - '@tjsr/simple-env-utils'
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name:
+        id: get-latest-version
+        run: |
+          LATEST_VERSION=`cat deptest.json | jq -r '.vite[] | select(.dependent == "${{ inputs.package }}") | .latest'`
+          echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+          echo "branch=dependency/${{ inputs.package }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name:
+        id: update-package
+        run: |
+          npm install --save-exact ${{ inputs.package }}@${{ steps.get-latest-version.outputs.latestVersion }}
+
+      - name: Crete branch for selected package
+        run: |
+          git checkout -b ${{ steps.get-latest-version.outputs.branch }}
+          git add package.json package-lock.json
+          git commit -m "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}"
+          git push origin ${{ steps.get-latest-version.outputs.branch }}
