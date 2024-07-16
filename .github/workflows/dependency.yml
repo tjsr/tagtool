@@ -50,11 +50,11 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
-      - name:
+      - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
         id: install
         run: npm ci
 
-      - name: Get latest version for ${{ env.PACKAGE }} on ${{ env.PROJECT }}
+      - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
         id: get-latest-version
         run: |
           npm outdated --json --all $PACKAGE
