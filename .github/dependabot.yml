@@ -17,6 +17,12 @@ updates:
       interval: 'daily'
     assignees:
     - 'tjsr'
+    groups:
+      prisma:
+        applies-to: version-updates
+        patterns:
+        - "prisma*
+        - "@prisma/*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
