@@ -46,6 +46,10 @@ jobs:
             ${{ runner.os }}-
 
       - name:
+        id: install
+        run: npm ci
+
+      - name:
         id: get-latest-version
         env:
           PACKAGE: ${{ inputs.package }}
