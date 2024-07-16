@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PROJECT: tagtool
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -46,19 +47,40 @@ jobs:
 
       - name:
         id: get-latest-version
+        env:
+          PACKAGE: ${{ inputs.package }}
         run: |
-          LATEST_VERSION=`npm outdated --json --all ${{ inputs.package }} | jq -r '.vite[] | select(.dependent == "${{ inputs.package }}") | .latest'`
+          LATEST_VERSION=`npm outdated --json --all $PACKAGE | jq -r ".\"$PACKAGE\"[] | select(.dependent == \"$PROJECT\") | .latest"`
           echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
           echo "branch=dependency/${{ inputs.package }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+          if [ -z "$LATEST_VERSION" ]; then
+            echo "No new version found for $PACKAGE"
+            echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New version found: $LATEST_VERSION"
+            echo "hasNewVersion=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name:
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
         id: update-package
         run: |
           npm install --save-exact ${{ inputs.package }}@${{ steps.get-latest-version.outputs.latestVersion }}
 
       - name: Crete branch for selected package
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
+        id: crete-branch
         run: |
           git checkout -b ${{ steps.get-latest-version.outputs.branch }}
           git add package.json package-lock.json
           git commit -m "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}"
           git push origin ${{ steps.get-latest-version.outputs.branch }}
+
+      - name:
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
+        id: create-pr
+        run: |
+          gh pr create \
+            --title "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
+            --body "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
+            --base main --head ${{ steps.get-latest-version.outputs.branch }}
