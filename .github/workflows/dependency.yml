@@ -50,7 +50,11 @@ jobs:
         env:
           PACKAGE: ${{ inputs.package }}
         run: |
-          LATEST_VERSION=`npm outdated --json --all $PACKAGE | jq -r ".\"$PACKAGE\"[] | select(.dependent == \"$PROJECT\") | .latest"`
+          OUTDATED=`npm outdated --json --all $PACKAGE`
+          echo Got json output of npm outdated command:
+          echo $OUTDATED
+
+          LATEST_VERSION=`echo $OUTDATED | jq -r ".\"$PACKAGE\"[] | select(.dependent == \"$PROJECT\") | .latest"`
           echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
           echo "branch=dependency/${{ inputs.package }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
           if [ -z "$LATEST_VERSION" ]; then
