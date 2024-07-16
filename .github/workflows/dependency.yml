@@ -49,7 +49,7 @@ jobs:
         id: install
         run: npm ci
 
-      - name:
+      - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
         id: get-latest-version
         env:
           PACKAGE: ${{ inputs.package }}
