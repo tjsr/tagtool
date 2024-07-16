@@ -58,6 +58,11 @@ jobs:
           echo Got json output of npm outdated command:
           echo $OUTDATED
 
+          if [ -z "$OUTDATED" ]; then
+            echo "No new version found for $PACKAGE"
+            echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
+          else
+
           LATEST_VERSION=`echo $OUTDATED | jq -r ".\"$PACKAGE\"[] | select(.dependent == \"$PROJECT\") | .latest"`
           echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
           echo "branch=dependency/${{ inputs.package }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
