@@ -47,7 +47,7 @@ jobs:
       - name:
         id: get-latest-version
         run: |
-          LATEST_VERSION=`cat deptest.json | jq -r '.vite[] | select(.dependent == "${{ inputs.package }}") | .latest'`
+          LATEST_VERSION=`npm outdated --json --all ${{ inputs.package }} | jq -r '.vite[] | select(.dependent == "${{ inputs.package }}") | .latest'`
           echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
           echo "branch=dependency/${{ inputs.package }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
 
