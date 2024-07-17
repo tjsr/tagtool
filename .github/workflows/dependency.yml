@@ -60,6 +60,8 @@ jobs:
           PACKAGE: ${{ env.PACKAGE }}
           PROJECT: ${{ env.PROJECT }}
         run: |
+          set +e
+
           OUTDATED=`npm outdated --json --all $PACKAGE`
 
           if [ -z "$OUTDATED" ] || [ "$OUTDATED" = "{}" ]; then
