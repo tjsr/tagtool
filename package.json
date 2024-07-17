@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@tjsr/express-server-helper": "^0.0.3",
-    "@tjsr/mysql-pool-utils": "^0.1.8",
+    "@tjsr/mysql-pool-utils": "^0.1.9",
     "@tjsr/simple-env-utils": "^0.1.3",
     "@tjsr/user-session-middleware": "^0.0.25",
     "@vitejs/plugin-react": "^4.3.1",
