@@ -12,6 +12,9 @@ on:
         - '@tjsr/user-session-middleware'
         - '@tjsr/mysql-pool-utils'
         - '@tjsr/simple-env-utils'
+  push:
+    branches:
+    - 'workflows/dependency*'
 
 jobs:
   create-branch:
@@ -19,6 +22,7 @@ jobs:
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PROJECT: tagtool
+      PACKAGE: ${{ inputs.package }} || '@tjsr/mysql-pool-utils'
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -50,11 +54,10 @@ jobs:
         id: install
         run: npm ci
 
-      - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
+      - name: Get latest version for ${{ env.PACKAGE }} on ${{ env.PROJECT }}
         id: get-latest-version
-        env:
-          PACKAGE: ${{ inputs.package }}
         run: |
+          npm outdated --json --all $PACKAGE
           OUTDATED=`npm outdated --json --all $PACKAGE`
           echo Got json output of npm outdated command:
           echo $OUTDATED
@@ -67,7 +70,7 @@ jobs:
 
           # LATEST_VERSION=`echo $OUTDATED | jq -r ".\"$PACKAGE\"[] | select(.dependent == \"$PROJECT\") | .latest"`
           # echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
-          # echo "branch=dependency/${{ inputs.package }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+          # echo "branch=dependency/$PACKAGE/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
           # if [ -z "$LATEST_VERSION" ]; then
           #   echo "No new version found for $PACKAGE"
           #   echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
@@ -80,7 +83,7 @@ jobs:
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
         id: update-package
         run: |
-          npm install --save-exact ${{ inputs.package }}@${{ steps.get-latest-version.outputs.latestVersion }}
+          npm install --save-exact ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latestVersion }}
 
       - name: Crete branch for selected package
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
@@ -88,7 +91,7 @@ jobs:
         run: |
           git checkout -b ${{ steps.get-latest-version.outputs.branch }}
           git add package.json package-lock.json
-          git commit -m "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}"
+          git commit -m "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latestVersion }}"
           git push origin ${{ steps.get-latest-version.outputs.branch }}
 
       - name:
@@ -96,6 +99,6 @@ jobs:
         id: create-pr
         run: |
           gh pr create \
-            --title "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
-            --body "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
+            --title "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
+            --body "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
             --base main --head ${{ steps.get-latest-version.outputs.branch }}
