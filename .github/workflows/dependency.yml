@@ -81,8 +81,6 @@ jobs:
           OUTDATED=`echo $OUTDATED | jq -r ".\"$PACKAGE\"[]"`
           echo "Updated outdated: $OUTDATED"
           
-          " | select(.dependent == \"$PROJECT\")"`
-
           PACKAGE_DEP=$(echo "$OUTDATED" | jq -r --arg package "$PACKAGE" '
             .[$package] | if type == "array" then . else [.] end
           ')
