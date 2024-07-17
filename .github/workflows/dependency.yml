@@ -60,7 +60,7 @@ jobs:
           npm outdated --json --all $PACKAGE
           OUTDATED=`npm outdated --json --all $PACKAGE`
 
-          if [ -z "$OUTDATED" ] || [ "$OUTDATED" == "{}" ]; then
+          if [ -z "$OUTDATED" ] || [ "$OUTDATED" = "{}" ]; then
             echo "No new version found for $PACKAGE"
             echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
             exit 0
