@@ -62,22 +62,29 @@ jobs:
           echo Got json output of npm outdated command:
           echo $OUTDATED
 
-          # if [ -z "$OUTDATED" || "$OUTDATED" -eq "{}" ]; then
-          #   echo "No new version found for $PACKAGE"
-          #   echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
-          #   exit 0
-          # fi
+          if [ -z "$OUTDATED" || "$OUTDATED" -eq "{}" ]; then
+            echo "No new version found for $PACKAGE"
+            echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-          # LATEST_VERSION=`echo $OUTDATED | jq -r ".\"$PACKAGE\"[] | select(.dependent == \"$PROJECT\") | .latest"`
-          # echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
-          # echo "branch=dependency/$PACKAGE/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
-          # if [ -z "$LATEST_VERSION" ]; then
-          #   echo "No new version found for $PACKAGE"
-          #   echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
-          # else
-          #   echo "New version found: $LATEST_VERSION"
-          #   echo "hasNewVersion=true" >> "$GITHUB_OUTPUT"
-          # fi
+          PACKAGE_DEP=`echo $OUTDATED | jq -r ".\"$PACKAGE\"[] | select(.dependent == \"$PROJECT\")"`
+          if [ -z "$PACKAGE_DEP" ]; then
+            echo "No direct dependency found for $PACKAGE in $PROJECT"
+            exit 0
+          fi
+
+          LATEST_VERSION=`echo $PACKAGE_DEP | jq -r ".latest"`
+          if [ -z "$LATEST_VERSION" ]; then
+            echo "No new version found for $PACKAGE"
+            echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "New version found: $LATEST_VERSION"
+          echo "hasNewVersion=true" >> "$GITHUB_OUTPUT"
+          echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+          echo "branch=dependency/$PACKAGE/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
 
       - name:
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
