@@ -60,60 +60,26 @@ jobs:
           PACKAGE: ${{ env.PACKAGE }}
           PROJECT: ${{ env.PROJECT }}
         run: |
-          if [ -z "$PACKAGE" ]; then
-              echo "Need to set PACKAGE"
-              exit 1
-          fi  
-
-          if [ -z "$PROJECT" ]; then
-              echo "Need to set PROJECT"
-              exit 1
-          fi
-
-          set +e
-
-          # echo "Running NPM..."
-          # npm outdated --json --all $PACKAGE
-          # echo "Got npm outdated, running assigned to var..."
-
           OUTDATED=`npm outdated --json --all $PACKAGE`
-          echo "OUTDATED value: '$OUTDATED'"
 
           if [ -z "$OUTDATED" ] || [ "$OUTDATED" = "{}" ]; then
             echo "No new version found for $PACKAGE"
             echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
             exit 0
-          else
-            echo Found outated data: $OUTDATED
           fi
 
-          echo "Getting PACKAGE_DEP" as jq from $OUTDATED
-          OUTDATED=`echo $OUTDATED | jq -r ".\"$PACKAGE\"[]"`
-          echo "Updated outdated: $OUTDATED"
-          
-          PACKAGE_DEP=$(echo "$OUTDATED" | jq -r --arg package "$PACKAGE" '
+          OUTDATED=$(echo "$OUTDATED" | jq -r --arg package "$PACKAGE" '
             .[$package] | if type == "array" then . else [.] end
           ')
 
-          echo Package_dep: $PACKAGE_DEP
-          PACKAGE_DEP=$(echo $OUTDATED | jq -r --arg project "$PROJECT" '
+          LATEST_VERSION=$(echo $OUTDATED | jq -r --arg project "$PROJECT" '
             .[] | select(.dependent == $project) | .latest
           ')
 
-          if [ -z "$PACKAGE_DEP" ] || [ "$PACKAGE_DEP" = "[]" ]; then
-            echo "No direct dependency found for $PACKAGE in $PROJECT"
-            exit 0
-          else
-            echo Found direct dependency: $PACKAGE_DEP
-          fi
-
-          LATEST_VERSION=`echo $PACKAGE_DEP | jq -r ".latest"`
           if [ -z "$LATEST_VERSION" ]; then
             echo "No new version found for $PACKAGE"
             echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
             exit 0
-          else
-            echo "New version found: $LATEST_VERSION"
           fi
 
           echo "New version found: $LATEST_VERSION"
