@@ -95,7 +95,7 @@ jobs:
         run: |
           npm install --save-exact ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latestVersion }}
 
-      - name: Crete branch and commit package[-lock].json to ${{ steps.get-latest-version.outputs.branch }}
+      - name: Crete branch and commit package[-lock].json to branch.
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
         id: crete-branch
         run: |
@@ -104,7 +104,7 @@ jobs:
           git commit -m "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latestVersion }}"
           git push origin ${{ steps.get-latest-version.outputs.branch }}
 
-      - name: Create github PR ${{ steps.get-latest-version.outputs.branch }}
+      - name: Create github PR for branch.
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
         id: create-pr
         run: |
