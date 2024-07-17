@@ -22,7 +22,7 @@ jobs:
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PROJECT: tagtool
-      PACKAGE: ${{ inputs.package }} || '@tjsr/mysql-pool-utils'
+      PACKAGE: ${{ inputs.package || '@tjsr/mysql-pool-utils' }}
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
