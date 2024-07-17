@@ -60,11 +60,21 @@ jobs:
           PACKAGE: ${{ env.PACKAGE }}
           PROJECT: ${{ env.PROJECT }}
         run: |
+          if [ -z "$PACKAGE" ]; then
+              echo "Need to set PACKAGE"
+              exit 1
+          fi  
+
+          if [ -z "$PROJECT" ]; then
+              echo "Need to set PROJECT"
+              exit 1
+          fi
+
           set +e
 
-          echo "Running NPM..."
-          npm outdated --json --all $PACKAGE
-          echo "Got npm outdated, running assigned to var..."
+          # echo "Running NPM..."
+          # npm outdated --json --all $PACKAGE
+          # echo "Got npm outdated, running assigned to var..."
 
           OUTDATED=`npm outdated --json --all $PACKAGE`
           echo "OUTDATED value: '$OUTDATED'"
