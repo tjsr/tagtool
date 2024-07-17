@@ -50,12 +50,15 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
-      - name:
+      - name: Install ${{ env.PROJECT }} dependencies
         id: install
         run: npm ci
 
       - name: Get latest version for ${{ env.PACKAGE }} on ${{ env.PROJECT }}
         id: get-latest-version
+        env:
+          PACKAGE: ${{ env.PACKAGE }}
+          PROJECT: ${{ env.PROJECT }}
         run: |
           npm outdated --json --all $PACKAGE
           OUTDATED=`npm outdated --json --all $PACKAGE`
