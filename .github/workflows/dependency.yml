@@ -98,7 +98,7 @@ jobs:
           echo Package_dep: $PACKAGE_DEP
           PACKAGE_DEP=$(echo $OUTDATED | jq -r --arg project "$PROJECT" '
             .[] | select(.dependent == $project) | .latest
-          '
+          ')
 
           if [ -z "$PACKAGE_DEP" ] || [ "$PACKAGE_DEP" = "[]" ]; then
             echo "No direct dependency found for $PACKAGE in $PROJECT"
