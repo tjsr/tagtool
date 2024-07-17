@@ -60,7 +60,9 @@ jobs:
           PACKAGE: ${{ env.PACKAGE }}
           PROJECT: ${{ env.PROJECT }}
         run: |
+          echo "Running NPM..."
           npm outdated --json --all $PACKAGE
+          echo "Got npm outdated, running assigned to var..."
           OUTDATED=`npm outdated --json --all $PACKAGE`
           echo "OUTDATED value: '$OUTDATED'"
 
@@ -95,7 +97,7 @@ jobs:
           echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
           echo "branch=dependency/$PACKAGE/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Update $${ env.PACKAGE }} via npm
+      - name: Update ${ env.PACKAGE }} via npm
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
         id: update-package
         run: |
