@@ -60,6 +60,8 @@ jobs:
           PACKAGE: ${{ env.PACKAGE }}
           PROJECT: ${{ env.PROJECT }}
         run: |
+          set +e
+
           echo "Running NPM..."
           npm outdated --json --all $PACKAGE
           echo "Got npm outdated, running assigned to var..."
