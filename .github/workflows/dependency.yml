@@ -56,59 +56,36 @@ jobs:
 
       - name: Get latest version for ${{ env.PACKAGE }} on ${{ env.PROJECT }}
         id: get-latest-version
-        env:
-          PACKAGE: ${{ env.PACKAGE }}
-          PROJECT: ${{ env.PROJECT }}
-        run: |
-          set +e
+        uses: tjsr/action-npm-outdated@main
+        with:
+          project: ${{ env.PROJECT }}
+          dependency: ${{ env.PACKAGE }}
 
-          OUTDATED=`npm outdated --json --all $PACKAGE`
-
-          if [ -z "$OUTDATED" ] || [ "$OUTDATED" = "{}" ]; then
-            echo "No new version found for $PACKAGE"
-            echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          OUTDATED=$(echo "$OUTDATED" | jq -r --arg package "$PACKAGE" '
-            .[$package] | if type == "array" then . else [.] end
-          ')
-
-          LATEST_VERSION=$(echo $OUTDATED | jq -r --arg project "$PROJECT" '
-            .[] | select(.dependent == $project) | .latest
-          ')
-
-          if [ -z "$LATEST_VERSION" ]; then
-            echo "No new version found for $PACKAGE"
-            echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "New version found: $LATEST_VERSION"
-          echo "hasNewVersion=true" >> "$GITHUB_OUTPUT"
-          echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
-          echo "branch=dependency/$PACKAGE/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Get target branch name
+        id: get-branch
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
+        run: echo "branch=dependency/${{ env.PACKAGE }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Update ${{ env.PACKAGE }} via npm
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
         id: update-package
         run: |
-          npm install --save-exact ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latestVersion }}
+          npm install --save-exact ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latest }}
 
       - name: Crete branch and commit package[-lock].json to branch.
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
         id: crete-branch
         run: |
-          git checkout -b ${{ steps.get-latest-version.outputs.branch }}
+          git checkout -b ${{ steps.get-branch.outputs.branch }}
           git add package.json package-lock.json
-          git commit -m "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latestVersion }}"
-          git push origin ${{ steps.get-latest-version.outputs.branch }}
+          git commit -m "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}"
+          git push origin ${{ steps.get-branch.outputs.branch }}
 
       - name: Create github PR for branch.
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
         id: create-pr
         run: |
           gh pr create \
-            --title "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
-            --body "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
-            --base main --head ${{ steps.get-latest-version.outputs.branch }}
+            --title "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}" \
+            --body "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}" \
+            --base main --head ${{ steps.get-branch.outputs.branch }}
