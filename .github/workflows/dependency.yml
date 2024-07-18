@@ -14,7 +14,7 @@ on:
         - '@tjsr/simple-env-utils'
         - '@types/node'
         - 'prettier'
-        - vite'
+        - 'vite'
   push:
     branches:
     - 'workflows/dependency*'
