@@ -12,6 +12,9 @@ on:
         - '@tjsr/user-session-middleware'
         - '@tjsr/mysql-pool-utils'
         - '@tjsr/simple-env-utils'
+        - '@types/node'
+        - 'prettier'
+        - vite'
   push:
     branches:
     - 'workflows/dependency*'
