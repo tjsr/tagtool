@@ -54,7 +54,7 @@ jobs:
         id: install
         run: npm ci
 
-      - name: Get latest version for ${{ env.PACKAGE }} on ${{ env.PROJECT }}
+      - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
         id: get-latest-version
         uses: tjsr/action-npm-outdated@main
         with:
