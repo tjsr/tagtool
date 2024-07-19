@@ -56,6 +56,12 @@ jobs:
       - name: List all npm dependencies
         run: npm ls --all
 
+      - name: List all npm outdated
+        run: npm outdated --json || true
+
+      - name: List ${{ inputs.package }} npm outdated
+        run: npm outdated --json ${{ inputs.package }} || true
+
       - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
         id: get-latest-version
         uses: tjsr/action-npm-outdated@develop/debug-outdated-output
