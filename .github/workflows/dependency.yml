@@ -24,7 +24,7 @@ jobs:
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PROJECT: tagtool
-      PACKAGE: ${{ inputs.package || '@tjsr/mysql-pool-utils' }}
+      PACKAGE: ${{ inputs.package || '@types/node' }}
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -71,20 +71,20 @@ jobs:
         run: |
           npm install --save-exact ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latest }}
 
-      # - name: Crete branch and commit package[-lock].json to branch.
-      #   if: steps.get-latest-version.outputs.hasNewVersion == 'true'
-      #   id: crete-branch
-      #   run: |
-      #     git checkout -b ${{ steps.get-branch.outputs.branch }}
-      #     git add package.json package-lock.json
-      #     git commit -m "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}"
-      #     git push origin ${{ steps.get-branch.outputs.branch }}
+      - name: Crete branch and commit package[-lock].json to branch.
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
+        id: crete-branch
+        run: |
+          git checkout -b ${{ steps.get-branch.outputs.branch }}
+          git add package.json package-lock.json
+          git commit -m "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}"
+          git push origin ${{ steps.get-branch.outputs.branch }}
 
-      # - name: Create github PR for branch.
-      #   if: steps.get-latest-version.outputs.hasNewVersion == 'true'
-      #   id: create-pr
-      #   run: |
-      #     gh pr create \
-      #       --title "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}" \
-      #       --body "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}" \
-      #       --base main --head ${{ steps.get-branch.outputs.branch }}
+      - name: Create github PR for branch.
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
+        id: create-pr
+        run: |
+          gh pr create \
+            --title "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}" \
+            --body "Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}" \
+            --base main --head ${{ steps.get-branch.outputs.branch }}
