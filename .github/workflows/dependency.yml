@@ -14,7 +14,7 @@ on:
         - '@tjsr/simple-env-utils'
   push:
     branches:
-    - 'workflows/dependency*'
+    - 'workflow/dependency*'
 
 jobs:
   create-branch:
