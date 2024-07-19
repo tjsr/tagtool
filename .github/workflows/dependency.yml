@@ -53,6 +53,12 @@ jobs:
         id: install
         run: npm ci
 
+      - name: Debug output npm outdated
+        run: npm outdated
+  
+      - name: Debug output npm outdated json
+        run: npm outdated --json
+  
       - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
         id: get-latest-version
         uses: tjsr/action-npm-outdated@develop/debug-outdated-output
