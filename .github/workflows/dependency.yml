@@ -37,6 +37,9 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           # Defaults to the user or organization that owns the workflow file
           scope: '@tjsr'
+      
+      - name: Install npm 10.8.2
+        run: npm install -g npm@10.8.2
 
       - name: Cache node modules
         id: cache-node_modules
@@ -52,15 +55,6 @@ jobs:
       - name: Install ${{ env.PROJECT }} dependencies
         id: install
         run: npm ci
-
-      - name: List all npm dependencies
-        run: npm ls --all
-
-      - name: List all npm outdated
-        run: npm outdated --json || true
-
-      - name: List ${{ inputs.package }} npm outdated
-        run: npm outdated --json ${{ inputs.package }} || true
 
       - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
         id: get-latest-version
