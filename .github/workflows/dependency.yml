@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       # Setup .npmrc file to publish to GitHub Packages
       - uses: actions/setup-node@v4
@@ -88,6 +90,7 @@ jobs:
           title: Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}
           branch: ${{ steps.get-branch.outputs.branch }}
           add-paths: package.json package-lock.json
+          reviewers: tjsr
 
       # - name: Check out repository code
       #   uses: actions/checkout@v4
