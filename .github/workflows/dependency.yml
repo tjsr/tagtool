@@ -91,13 +91,13 @@ jobs:
               echo "No new version found for ${{ env.PACKAGE }}."
             else
               echo "Using version $LATEST_VERSION for ${{ env.PACKAGE }} retrieved from outdated."
-              echo "hasNewVersion=true" >> "$GITHUB_ENV"
-              echo "version=$LATEST_VERSION" >> "$GITHUB_ENV"
+              echo "hasNewVersion=true" >> "$GITHUB_OUTPUT"
+              echo "version=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
             fi
           else
             echo "Using version $SPECIFIED_VERSION for ${{ env.PACKAGE }} provided in parameter."
-            echo "hasNewVersion=true" >> "$GITHUB_ENV"
-            echo "version=$SPECIFIED_VERSION" >> "$GITHUB_ENV"
+            echo "hasNewVersion=true" >> "$GITHUB_OUTPUT"
+            echo "version=$SPECIFIED_VERSION" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Get target branch name
@@ -144,7 +144,7 @@ jobs:
         run: |
           BASE_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
           echo "PR will be based off branch $BASE_BRANCH"
-          echo "branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
+          echo "branch=$BASE_BRANCH" >> "$GITHUB_OUTPUT"
   
       - name: Create a Pull Request for the changes
         if: steps.get-version.outputs.hasNewVersion == 'true' && steps.check-pr-exists.outputs.exists == 'false'
