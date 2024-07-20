@@ -181,18 +181,27 @@ jobs:
     needs: [get-target-version, check-branch]
     runs-on: ubuntu-latest
     steps:
-    - name: Cache project files for later steps
+    # Setup .npmrc file to publish to GitHub Packages
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20.15.1
+        cache: 'npm'
+        registry-url: 'https://npm.pkg.github.com'
+        # Defaults to the user or organization that owns the workflow file
+        scope: '@tjsr'
+
+    - name: Install npm 10.8.2
+      # Unfortunately have to reinstall using this split method.
+      run: npm install -g npm@10.8.2
+
+    - name: Cache project files for later steps  
       uses: actions/cache@main
       env:
         cache-name: cache-node-modules
       with:
         path: ./
         key: "runcache-${{ github.run_id }}"
-
-    - name: Install npm 10.8.2
-      # Unfortunately have to reinstall using this split method.
-      run: npm install -g npm@10.8.2
-
+    
     - name: Update ${{ needs.get-target-version.outputs.dependency }} via npm
       id: update-package
       run: |
