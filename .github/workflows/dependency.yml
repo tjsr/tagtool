@@ -103,11 +103,9 @@ jobs:
           VERSION: ${{ steps.get-version.outputs.version }}
         if: steps.get-version.outputs.hasNewVersion == 'true' || inputs.package-version != ''
         run: |
-          if [ -z "$SPECIFIED_VERSION" ]; then
-            if [ -z "$LATEST_VERSION" == "" ]; then
-              echo "No new version found for ${{ env.PACKAGE }}."
-              exit 1
-            fi
+          if [ -z "$VERSION" ]; then
+            echo "No new version found for ${{ env.PACKAGE }}."
+            exit 1
           fi
           echo "branch=dependency/${{ env.PACKAGE }}/$VERSION" >> "$GITHUB_OUTPUT"
 
