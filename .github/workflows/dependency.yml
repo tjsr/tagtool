@@ -89,11 +89,11 @@ jobs:
           if [ -z "$SPECIFIED_VERSION" ]; then
             if [ -z "$LATEST_VERSION" ]; then
               echo "No new version found for ${{ env.PACKAGE }}."
-              exit 1
+            else
+              echo "Using version $LATEST_VERSION for ${{ env.PACKAGE }} retrieved from outdated."
+              echo "hasNewVersion=true" >> "$GITHUB_ENV
+              echo "version=$LATEST_VERSION" >> "$GITHUB_ENV"
             fi
-            echo "Using version $LATEST_VERSION for ${{ env.PACKAGE }} retrieved from outdated."
-            echo "hasNewVersion=true" >> "$GITHUB_ENV
-            echo "version=$LATEST_VERSION" >> "$GITHUB_ENV"
           else
             echo "Using version $SPECIFIED_VERSION for ${{ env.PACKAGE }} provided in parameter."
             echo "hasNewVersion=true" >> "$GITHUB_ENV
@@ -108,9 +108,9 @@ jobs:
         run: |
           if [ -z "$VERSION" ]; then
             echo "No new version found for ${{ env.PACKAGE }}."
-            exit 1
+          else
+            echo "branch=dependency/${{ env.PACKAGE }}/$VERSION" >> "$GITHUB_OUTPUT"
           fi
-          echo "branch=dependency/${{ env.PACKAGE }}/$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check if PR exists
         id: check-pr-exists
