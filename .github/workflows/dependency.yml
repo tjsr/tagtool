@@ -34,6 +34,14 @@ jobs:
     outputs:
       version: ${{ inputs.package-version }}
       dependency: "${{ env.PACKAGE }}@${{ inputs.package-version }}"
+    steps:
+    - name: Get version and dependency based on params
+      id: select-version
+      run: |
+        if [ -z "${{ inputs.package-version }}" ]; then
+          echo "version=${{ inputs.package-version }}" >> $GITHUB_ENV
+          echo "hasNewVersion=true" >> $GITHUB_ENV
+        fi
 
   get-outdated-version:
     if: inputs.package-version != ''
