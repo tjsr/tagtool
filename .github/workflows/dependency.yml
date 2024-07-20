@@ -5,7 +5,7 @@ on:
     inputs:
       package:
         type: choice
-        description: 'Environment ID'
+        description: 'Environment ID (required)'
         required: true
         default: 'dev'
         options:
@@ -17,6 +17,7 @@ on:
         - '@types/node'
         - 'vite'
       package-version:
+        description: 'Package version to use (optional)'
         type: string
         required: false
   workflow_call:
@@ -86,13 +87,15 @@ jobs:
           SPECIFIED_VERSION: ${{ inputs.package-version }}
         run: |
           if [ -z "$SPECIFIED_VERSION" ]; then
-            if [ -z "$LATEST_VERSION" == "" ]; then
+            if [ -z "$LATEST_VERSION" ]; then
               echo "No new version found for ${{ env.PACKAGE }}."
               exit 1
             fi
+            echo "Using version $LATEST_VERSION for ${{ env.PACKAGE }} retrieved from outdated."
             echo "hasNewVersion=true" >> "$GITHUB_ENV
             echo "version=$LATEST_VERSION" >> "$GITHUB_ENV"
           else
+            echo "Using version $SPECIFIED_VERSION for ${{ env.PACKAGE }} provided in parameter."
             echo "hasNewVersion=true" >> "$GITHUB_ENV
             echo "version=$SPECIFIED_VERSION" >> "$GITHUB_ENV"
           fi
@@ -120,8 +123,10 @@ jobs:
               --head '${{ steps.get-branch.outputs.branch }}' \
               )
           if ((prs > 0)); then
+              echo "Branch already exists at dependency/${{ env.PACKAGE }}/$VERSION - no PR will be created."
               echo "exists=true" >> "$GITHUB_OUTPUT"
           else
+              echo "PR will be created at dependency/${{ env.PACKAGE }}/$VERSION"
               echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -129,12 +134,16 @@ jobs:
         if: steps.get-version.outputs.hasNewVersion == 'true' && steps.check-pr-exists.outputs.exists == 'false'
         id: update-package
         run: |
+          echo Installing updated npm depenency ${{ env.PACKAGE }}@${{ steps.get-version.outputs.version }}
           npm install --save ${{ env.PACKAGE }}@${{ steps.get-version.outputs.version }}
 
       - name: Extract base branch name
         id: base-branch
         shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        run: |
+          BASE_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          echo "PR will be based off branch $BASE_BRANCH"
+          echo "branch=$BASE_BRANCH" >> $GITHUB_OUTPUT
   
       - name: Create a Pull Request for the changes
         if: steps.get-version.outputs.hasNewVersion == 'true' && steps.check-pr-exists.outputs.exists == 'false'
