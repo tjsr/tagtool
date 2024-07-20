@@ -14,9 +14,6 @@ on:
         - '@tjsr/simple-env-utils'
         - '@types/node'
         - 'vite'
-  push:
-    branches:
-    - 'workflow/dependency*'
   
 jobs:
   create-branch:
