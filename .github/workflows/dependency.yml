@@ -84,6 +84,7 @@ jobs:
 
       - name: Check if PR exists
         id: check-pr-exists
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true' && steps.get-branch.outputs.branch != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -109,7 +110,7 @@ jobs:
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
   
       - name: Create a Pull Request for the changes
-        if: steps.check-pr-exists.outputs.exists == 'false'
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true' && steps.check-pr-exists.outputs.exists == 'false'
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}
