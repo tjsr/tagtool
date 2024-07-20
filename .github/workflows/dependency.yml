@@ -99,7 +99,7 @@ jobs:
         if: steps.get-latest-version.outputs.hasNewVersion == 'true' && steps.check-pr-exists.outputs.exists == 'false'
         id: update-package
         run: |
-          npm install --save-exact ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latest }}
+          npm install --save ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latest }}
 
       - name: Extract base branch name
         id: base-branch
