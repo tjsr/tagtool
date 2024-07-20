@@ -106,6 +106,7 @@ jobs:
           VERSION: ${{ steps.get-version.outputs.version }}
         if: steps.get-version.outputs.hasNewVersion == 'true' || inputs.package-version != ''
         run: |
+          echo "Value of get-version outputs is ${{ steps.get-version.outputs.version }}"
           if [ -z "$VERSION" ]; then
             echo "No new version found for ${{ env.PACKAGE }}."
           else
