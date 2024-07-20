@@ -1,5 +1,5 @@
 name: Update dependency
-run-name: ${{ github.actor }} Update an npm dependency
+run-name: ${{ github.actor }} Update the npm dependency for ${{ inputs.package }}
 on:
   workflow_dispatch:
     inputs:
