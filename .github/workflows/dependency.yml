@@ -27,6 +27,7 @@ on:
 
 jobs:
   get-provided-version:
+    if: inputs.package-version != ''
     name: Use the specific tag version of ${{ inputs.package }} if provided from a webhook.
     runs-on: ubuntu-latest
     env:
@@ -44,7 +45,8 @@ jobs:
         fi
 
   get-outdated-version:
-    if: inputs.package-version != ''
+    name: Retrieve the latest version of ${{ inputs.package }} based on the npm outdated result.
+    if: inputs.package-version == ''
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -111,9 +113,11 @@ jobs:
       id: select-version
       run: |
         if [ -z "${{ inputs.package-version }}" ]; then
+          echo "Using output from specific version value being provided."
           echo "version=${{ inputs.package-version }}" >> $GITHUB_ENV
           echo "hasNewVersion=true" >> $GITHUB_ENV
         else
+          echo "Using output from values retrieved from outdated command."
           echo "hasNewVersion=${{ needs.get-outdated-version.outputs.hasNewVersion }}" >> $GITHUB_ENV
           echo "version=${{ needs.get-outdated-version.outputs.version }}" >> $GITHUB_ENV
         fi
