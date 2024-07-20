@@ -83,19 +83,20 @@ jobs:
         run: |
           npm install --save-exact ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latest }}
 
+      # - name: Check out repository code
+      #   uses: actions/checkout@v4
+      #   with:
+      #     ref: ${{ steps.get-branch.outputs.branch }}
+
       - name: Create a Pull Request for the changes
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}
           title: Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}
+          base: main
           branch: ${{ steps.get-branch.outputs.branch }}
-          add-paths: package.json package-lock.json
+          # add-paths: package.json package-lock.json
           reviewers: tjsr
-
-      # - name: Check out repository code
-      #   uses: actions/checkout@v4
-      #   with:
-      #     ref: ${{ steps.get-branch.outputs.branch }}
   
       # - name: Crete branch and commit package[-lock].json to branch.
       #   if: steps.get-latest-version.outputs.hasNewVersion == 'true'
