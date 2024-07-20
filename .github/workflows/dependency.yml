@@ -26,7 +26,17 @@ on:
         required: false
 
 jobs:
-  get-target-version:
+  get-provided-version:
+    name: Use the specific tag version of ${{ inputs.package }} if provided from a webhook.
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE: ${{ inputs.package }}
+    outputs:
+      version: ${{ inputs.package-version }}
+      dependency: "${{ env.PACKAGE }}@${{ inputs.package-version }}"
+
+  get-outdated-version:
+    if: inputs.package-version != ''
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -35,8 +45,15 @@ jobs:
     outputs:
       hasNewVersion: ${{ steps.get-latest-version.outputs.hasNewVersion }}
       version: ${{ inputs.package-version || steps.get-latest-version.outputs.latest }}
-      dependency: "${{ env.PACKAGE }}@${{ inputs.package-version || steps.get-latest-version.outputs.latest }}"
     steps:
+    - name: Cache project files for later steps
+      uses: actions/cache@main
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: ./
+        key: "runcache-${{ github.run_id }}"
+
     - name: Check out repository code
       uses: actions/checkout@v4
 
@@ -49,20 +66,19 @@ jobs:
         # Defaults to the user or organization that owns the workflow file
         scope: '@tjsr'
     
-    - name: Install npm 10.8.2
-      run: npm install -g npm@10.8.2
-
-    - name: Cache node modules
-      id: cache-node_modules
+    - name: Cache global node modules
       uses: actions/cache@main
       env:
-        cache-name: cache-node-modules
+        cache-name: cache-global-node-modules
       with:
         # npm cache files are stored in `~/.npm` on Linux/macOS
         path: ~/node_modules
         # todo - change this so we are less restrictive on package-lock changes
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
+    - name: Install npm 10.8.2
+      run: npm install -g npm@10.8.2
+  
     - name: Install ${{ env.PROJECT }} dependencies
       id: install
       run: npm ci
@@ -74,7 +90,28 @@ jobs:
         project: ${{ env.PROJECT }}
         dependency: ${{ env.PACKAGE }}
 
+  get-target-version:
+    runs-on: ubuntu-latest
+    name: Get the version of ${{ inputs.package }} to update to.
+    if: ${{ always() }}
+    needs: [get-provided-version, get-provided-version]
+    outputs:
+      version: ${{ steps.select-version.outputs.version }}
+      dependency: "${{ inputs.package }}@${{ steps.select-version.outputs.version }}"
+    steps:
+    - name: Get version and dependency based on params
+      id: select-version
+      run: |
+        if [ -z "${{ inputs.package-version }}" ]; then
+          echo "version=${{ inputs.package-version }}" >> $GITHUB_ENV
+          echo "hasNewVersion=true" >> $GITHUB_ENV
+        else
+          echo "hasNewVersion=${{ needs.get-outdated-version.outputs.hasNewVersion }}" >> $GITHUB_ENV
+          echo "version=${{ needs.get-outdated-version.outputs.version }}" >> $GITHUB_ENV
+        fi
+
   check-branch:
+    name: Check that a dependency upgrade branch for ${{ needs.get-target-version.outputs.dependency }} does not already exist
     permissions:
       contents: write
       pull-requests: write
