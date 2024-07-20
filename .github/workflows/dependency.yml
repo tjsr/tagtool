@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Get the version of ${{ inputs.package }} to update to.
     if: ${{ always() }}
-    needs: [get-provided-version, get-provided-version]
+    needs: [get-provided-version, get-outdated-version]
     outputs:
       version: ${{ steps.select-version.outputs.version }}
       dependency: "${{ inputs.package }}@${{ steps.select-version.outputs.version }}"
