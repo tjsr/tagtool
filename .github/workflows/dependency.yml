@@ -16,6 +16,9 @@ on:
         - '@tjsr/testutils'
         - '@types/node'
         - 'vite'
+      package-version:
+        type: string
+        required: false
   workflow_call:
     inputs:
       package:
