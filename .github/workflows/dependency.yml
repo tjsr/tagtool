@@ -186,7 +186,7 @@ jobs:
     - name: Install npm 10.8.2
       # Unfortunately have to reinstall using this split method.
       run: npm install -g npm@10.8.2
-    
+
     - name: Update ${{ needs.get-target-version.outputs.dependency }} via npm
       id: update-package
       run: |
