@@ -60,7 +60,7 @@ jobs:
 
       - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
         id: get-latest-version
-        uses: tjsr/action-npm-outdated@develop/debug-outdated-output
+        uses: tjsr/action-npm-outdated@main
         with:
           project: ${{ env.PROJECT }}
           dependency: ${{ env.PACKAGE }}
