@@ -12,6 +12,8 @@ on:
         - '@tjsr/user-session-middleware'
         - '@tjsr/mysql-pool-utils'
         - '@tjsr/simple-env-utils'
+        - '@tjsr/express-server-helper'
+        - '@tjsr/testutils'
         - '@types/node'
         - 'vite'
   workflow_call:
@@ -19,102 +21,130 @@ on:
       package:
         type: string
         required: true
-  
-jobs:
-  create-branch:
-    permissions:
-      contents: write
-      pull-requests: write
-      packages: read
+      package-version:
+        type: string
+        required: false
 
+jobs:
+  get-target-version:
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PROJECT: tagtool
-      PACKAGE: ${{ inputs.package || '@types/node' }}
+      PACKAGE: ${{ inputs.package }}
+    outputs:
+      hasNewVersion: ${{ steps.get-latest-version.outputs.hasNewVersion }}
+      version: ${{ inputs.package-version || steps.get-latest-version.outputs.latest }}
+      dependency: "${{ env.PACKAGE }}@${{ inputs.package-version || steps.get-latest-version.outputs.latest }}"
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
+    - name: Check out repository code
+      uses: actions/checkout@v4
 
-      # Setup .npmrc file to publish to GitHub Packages
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.15.1
-          cache: 'npm'
-          registry-url: 'https://npm.pkg.github.com'
-          # Defaults to the user or organization that owns the workflow file
-          scope: '@tjsr'
-      
-      - name: Install npm 10.8.2
-        run: npm install -g npm@10.8.2
+    # Setup .npmrc file to publish to GitHub Packages
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20.15.1
+        cache: 'npm'
+        registry-url: 'https://npm.pkg.github.com'
+        # Defaults to the user or organization that owns the workflow file
+        scope: '@tjsr'
+    
+    - name: Install npm 10.8.2
+      run: npm install -g npm@10.8.2
 
-      - name: Cache node modules
-        id: cache-node_modules
-        uses: actions/cache@main
-        env:
-          cache-name: cache-node-modules
-        with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/node_modules
-          # todo - change this so we are less restrictive on package-lock changes
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+    - name: Cache node modules
+      id: cache-node_modules
+      uses: actions/cache@main
+      env:
+        cache-name: cache-node-modules
+      with:
+        # npm cache files are stored in `~/.npm` on Linux/macOS
+        path: ~/node_modules
+        # todo - change this so we are less restrictive on package-lock changes
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Install ${{ env.PROJECT }} dependencies
-        id: install
-        run: npm ci
+    - name: Install ${{ env.PROJECT }} dependencies
+      id: install
+      run: npm ci
 
-      - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
-        id: get-latest-version
-        uses: tjsr/action-npm-outdated@main
-        with:
-          project: ${{ env.PROJECT }}
-          dependency: ${{ env.PACKAGE }}
+    - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
+      id: get-latest-version
+      uses: tjsr/action-npm-outdated@main
+      with:
+        project: ${{ env.PROJECT }}
+        dependency: ${{ env.PACKAGE }}
 
-      - name: Get target branch name
-        id: get-branch
-        env:
-          LATEST_VERSION: ${{ steps.get-latest-version.outputs.latest }}
-        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
-        run: |
+  check-branch:
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: read
+    needs: get-target-version
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE: ${{ inputs.package }}
+      PROVIDED_VERSION: ${{ inputs.package-version }}
+    outputs:
+      branch: ${{ steps.get-branch.outputs.branch }}
+      prExists: ${{ steps.check-pr-exists.outputs.exists }}
+    steps:
+    - name: Get target branch name
+      id: get-branch
+      env:
+        VERSION: ${{ needs.get-target-version.outputs.version }}
+      run: |
+        if [ ! -z "$PROVIDED_VERSION" ]; then
+          echo "branch=dependency/${{ env.PACKAGE }}/$PROVIDED_VERSION" >> "$GITHUB_OUTPUT"
+        else
           if [ -z "$LATEST_VERSION" == "" ]]; then
             echo "No new version found for ${{ env.PACKAGE }}."
             exit 1
           fi
-          echo "branch=dependency/${{ env.PACKAGE }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+          echo "branch=dependency/${{ env.PACKAGE }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"  
+        fi
 
-      - name: Check if PR exists
-        id: check-pr-exists
-        if: steps.get-latest-version.outputs.hasNewVersion == 'true' && steps.get-branch.outputs.branch != ''
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          prs=$(gh pr list \
-              --repo "$GITHUB_REPOSITORY" \
-              --head '${{ steps.get-branch.outputs.branch }}' \
-              )
-          if ((prs > 0)); then
-              echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-              echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
+    - name: Check if PR exists
+      id: check-pr-exists
+      if: steps.get-branch.outputs.branch != ''
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        prs=$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --head '${{ steps.get-branch.outputs.branch }}' \
+            )
+        if ((prs > 0)); then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+        else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+        fi
 
-      - name: Update ${{ env.PACKAGE }} via npm
-        if: steps.get-latest-version.outputs.hasNewVersion == 'true' && steps.check-pr-exists.outputs.exists == 'false'
-        id: update-package
-        run: |
-          npm install --save ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latest }}
+  update-and-pr:
+    name: Install package update to ${{ needs.get-target-version.outputs.dependency }} and create PR
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+    env:
+      PACKAGE: ${{ inputs.package }}
+    needs: [get-target-version, check-branch]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Update ${{ needs.get-target-version.outputs.dependency }} via npm
+      id: update-package
+      run: |
+        npm install --save ${{ needs.get-target-version.outputs.dependency }}
 
-      - name: Extract base branch name
-        id: base-branch
-        shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-  
-      - name: Create a Pull Request for the changes
-        if: steps.get-latest-version.outputs.hasNewVersion == 'true' && steps.check-pr-exists.outputs.exists == 'false'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          commit-message: Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}
-          title: Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}
-          base: ${{ steps.base-branch.outputs.branch }}
-          branch: ${{ steps.get-branch.outputs.branch }}
-          reviewers: tjsr
+    - name: Extract base branch name
+      id: base-branch
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+
+    - name: Create a Pull Request for the changes
+      uses: peter-evans/create-pull-request@v6
+      with:
+        commit-message: Update ${{ env.PACKAGE }} to ${{ needs.get-target-version.outputs.version }}
+        title: Update ${{ env.PACKAGE }} to ${{ needs.get-target-version.outputs.version }}
+        base: ${{ steps.base-branch.outputs.branch }}
+        branch: ${{ needs.check-branch.outputs.branch }}
+        reviewers: tjsr
