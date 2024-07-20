@@ -91,12 +91,12 @@ jobs:
               echo "No new version found for ${{ env.PACKAGE }}."
             else
               echo "Using version $LATEST_VERSION for ${{ env.PACKAGE }} retrieved from outdated."
-              echo "hasNewVersion=true" >> "$GITHUB_ENV
+              echo "hasNewVersion=true" >> "$GITHUB_ENV"
               echo "version=$LATEST_VERSION" >> "$GITHUB_ENV"
             fi
           else
             echo "Using version $SPECIFIED_VERSION for ${{ env.PACKAGE }} provided in parameter."
-            echo "hasNewVersion=true" >> "$GITHUB_ENV
+            echo "hasNewVersion=true" >> "$GITHUB_ENV"
             echo "version=$SPECIFIED_VERSION" >> "$GITHUB_ENV"
           fi
 
