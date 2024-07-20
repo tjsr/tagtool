@@ -1,6 +1,9 @@
 name: Build Tagtool
 run-name: ${{ github.actor }} Running Tagtool build.
-on: [push]
+on: 
+  push:
+    paths-ignore:
+      - '.github/workflows/dependency.yml'
 jobs:
   build-tagtool:
     runs-on: ubuntu-latest

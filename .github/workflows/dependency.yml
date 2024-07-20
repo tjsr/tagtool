@@ -12,12 +12,21 @@ on:
         - '@tjsr/user-session-middleware'
         - '@tjsr/mysql-pool-utils'
         - '@tjsr/simple-env-utils'
+        - '@types/node'
+        - 'vite'
+  
 jobs:
   create-branch:
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: read
+
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PROJECT: tagtool
+      PACKAGE: ${{ inputs.package || '@types/node' }}
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -26,65 +35,80 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20.15.1
+          cache: 'npm'
           registry-url: 'https://npm.pkg.github.com'
           # Defaults to the user or organization that owns the workflow file
           scope: '@tjsr'
+      
+      - name: Install npm 10.8.2
+        run: npm install -g npm@10.8.2
 
       - name: Cache node modules
-        id: cache-npm
+        id: cache-node_modules
         uses: actions/cache@main
         env:
           cache-name: cache-node-modules
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/.npm
+          path: ~/node_modules
           # todo - change this so we are less restrictive on package-lock changes
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
-      - name:
+      - name: Install ${{ env.PROJECT }} dependencies
         id: install
         run: npm ci
 
-      - name:
+      - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
         id: get-latest-version
+        uses: tjsr/action-npm-outdated@main
+        with:
+          project: ${{ env.PROJECT }}
+          dependency: ${{ env.PACKAGE }}
+
+      - name: Get target branch name
+        id: get-branch
         env:
-          PACKAGE: ${{ inputs.package }}
+          LATEST_VERSION: ${{ steps.get-latest-version.outputs.latest }}
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
         run: |
-          LATEST_VERSION=`npm outdated --json --all $PACKAGE | jq -r ".\"$PACKAGE\"[] | select(.dependent == \"$PROJECT\") | .latest"`
-          echo "latestVersion=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
-          echo "branch=dependency/${{ inputs.package }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
-          if [ -z "$LATEST_VERSION" ]; then
-            echo "No new version found for $PACKAGE"
-            echo "hasNewVersion=false" >> "$GITHUB_OUTPUT"
+          if [ -z "$LATEST_VERSION" == "" ]]; then
+            echo "No new version found for ${{ env.PACKAGE }}."
+            exit 1
+          fi
+          echo "branch=dependency/${{ env.PACKAGE }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if PR exists
+        id: check-pr-exists
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          prs=$(gh pr list \
+              --repo "$GITHUB_REPOSITORY" \
+              --head '${{ steps.get-branch.outputs.branch }}' \
+              )
+          if ((prs > 0)); then
+              echo "exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "New version found: $LATEST_VERSION"
-            echo "hasNewVersion=true" >> "$GITHUB_OUTPUT"
+              echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name:
-        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
+      - name: Update ${{ env.PACKAGE }} via npm
+        if: steps.get-latest-version.outputs.hasNewVersion == 'true' && steps.check-pr-exists.outputs.exists == 'false'
         id: update-package
         run: |
-          npm install --save-exact ${{ inputs.package }}@${{ steps.get-latest-version.outputs.latestVersion }}
+          npm install --save ${{ env.PACKAGE }}@${{ steps.get-latest-version.outputs.latest }}
 
-      - name: Crete branch for selected package
-        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
-        id: crete-branch
-        run: |
-          git checkout -b ${{ steps.get-latest-version.outputs.branch }}
-          git add package.json package-lock.json
-          git commit -m "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}"
-          git push origin ${{ steps.get-latest-version.outputs.branch }}
-
-      - name:
-        if: steps.get-latest-version.outputs.hasNewVersion == 'true'
-        id: create-pr
-        run: |
-          gh pr create \
-            --title "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
-            --body "Update ${{ inputs.package }} to ${{ steps.get-latest-version.outputs.latestVersion }}" \
-            --base main --head ${{ steps.get-latest-version.outputs.branch }}
+      - name: Extract base branch name
+        id: base-branch
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+  
+      - name: Create a Pull Request for the changes
+        if: steps.check-pr-exists.outputs.exists == 'false'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}
+          title: Update ${{ env.PACKAGE }} to ${{ steps.get-latest-version.outputs.latest }}
+          base: ${{ steps.base-branch.outputs.branch }}
+          branch: ${{ steps.get-branch.outputs.branch }}
+          reviewers: tjsr
