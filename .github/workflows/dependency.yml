@@ -65,8 +65,15 @@ jobs:
 
       - name: Get target branch name
         id: get-branch
+        env:
+          LATEST_VERSION: ${{ steps.get-latest-version.outputs.latest }}
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
-        run: echo "branch=dependency/${{ env.PACKAGE }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+        run: |
+          if [ -z "$LATEST_VERSION" == "" ]]; then
+            echo "No new version found for ${{ env.PACKAGE }}."
+            exit 1
+          fi
+          echo "branch=dependency/${{ env.PACKAGE }}/$LATEST_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Update ${{ env.PACKAGE }} via npm
         if: steps.get-latest-version.outputs.hasNewVersion == 'true'
