@@ -30,7 +30,6 @@ on:
 
 jobs:
   get-provided-version:
-    if: inputs.package-version != ''
     name: Use the specific tag version of ${{ inputs.package }} if provided from a webhook.
     runs-on: ubuntu-latest
     env:
@@ -49,7 +48,6 @@ jobs:
 
   get-outdated-version:
     name: Retrieve the latest version of ${{ inputs.package }} based on the npm outdated result.
-    if: inputs.package-version == ''
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -97,6 +95,7 @@ jobs:
       run: npm ci
 
     - name: Get latest version for ${{ inputs.package }} on ${{ env.PROJECT }}
+      if: inputs.package-version == ''
       id: get-latest-version
       uses: tjsr/action-npm-outdated@main
       with:
@@ -124,7 +123,6 @@ jobs:
           echo "hasNewVersion=${{ needs.get-outdated-version.outputs.hasNewVersion }}" >> $GITHUB_ENV
           echo "version=${{ needs.get-outdated-version.outputs.version }}" >> $GITHUB_ENV
         fi
-        return 0
 
   check-branch:
     name: Check that a dependency upgrade branch for ${{ needs.get-target-version.outputs.dependency }} does not already exist
