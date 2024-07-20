@@ -124,6 +124,7 @@ jobs:
           echo "hasNewVersion=${{ needs.get-outdated-version.outputs.hasNewVersion }}" >> $GITHUB_ENV
           echo "version=${{ needs.get-outdated-version.outputs.version }}" >> $GITHUB_ENV
         fi
+        return 0
 
   check-branch:
     name: Check that a dependency upgrade branch for ${{ needs.get-target-version.outputs.dependency }} does not already exist
