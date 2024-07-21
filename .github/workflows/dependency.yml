@@ -55,11 +55,17 @@ jobs:
           scope: '@tjsr'
 
       - name: Check latest version and create PR
-        id: check-version
+        id: raise-version-pr
         uses: tjsr/gh-util-actions/npm-dependency-pr@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           dependency: ${{ inputs.package }}
           packageVersion: ${{ inputs.package-version }}
           reviewers: 'tjsr'
+
+      - name: Verify PR creation details (skipped if no PR was created)
+        id: pr-details
+        if: steps.raise-version-pr.outputs.pullRequestNumber
+        run: |
+          echo "PR ${{ steps.raise-version-pr.outputs.pullRequestNumber }} crated at ${{ steps.raise-version-pr.outputs.pullRequestUrl }}"
 
