@@ -22,8 +22,8 @@
     "docker:build:dbmigrate": "docker build -t dbmigrate -f Dockerfile.dbmigrate .",
     "docker:test": "npm run docker:build && docker run --rm --name tagtool-test -it tagtool npm i && npm test",
     "link": "linkteam @tjsr/user-session-middleware,@tjsr/simple-env-utils,@tjsr/mysql-pool-utils,@tjsr/eslint-config,@tjsr/package-json-utils",
-    "lint": "eslint --config eslint.config.mjs src/*.ts",
-    "lint:fix": "eslint --config eslint.config.mjs --fix \"./src/**/*.{ts,tsx}\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix \"./src/**/*.{ts,tsx}\" .",
     "prettier": "prettier --single-quote --write \"./src/**/*.{ts,tsx}\"",
     "format": "npm run prettier && npm run lint",
     "db:up": "docker compose up --force-recreate -d mysqldb && docker compose run cidbmig",
@@ -44,6 +44,7 @@
     "url": "https://github.com/tjsr/tagtool/issues"
   },
   "dependencies": {
+    "@tjsr/config-eslint": "github:tjsr/eslint-config#main",
     "@tjsr/express-server-helper": "^0.0.3",
     "@tjsr/mysql-pool-utils": "^0.1.9",
     "@tjsr/simple-env-utils": "^0.1.3",
@@ -100,7 +101,6 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.16.2",
     "typescript": "^5.5.3",
-    "typescript-eslint": "^7.16.0",
     "vite": "^5.3.3",
     "vitest": "^1.6.0",
     "vitest-mock-express": "^2.2.0"

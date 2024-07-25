@@ -3,6 +3,6 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config({
   extends: [...tjsrEslintConfig],
-  files: ['**/*.ts'],
+  // files: ['**/*.ts'],
   ignores: ['dist/**', 'src/generated/**'],
 });

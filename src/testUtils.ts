@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+
 const CURRENT_TEST_RUN_ID = Math.floor(Math.random() * 1000);
 
 export const generateSuiteId = (suiteId: string, suiteRange = 1000): number => {
