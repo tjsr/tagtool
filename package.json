@@ -10,7 +10,7 @@
   "scripts": {
     "clean": "npx rimraf dist build",
     "clean:all": "npm run clean && npx rimraf build coverage dist node_modules",
-    "test": "vitest --run && npm run lint",
+    "test": "tsc && vitest --run && npm run lint",
     "start:frontend": "cross-env GENERATE_SOURCEMAP=true PORT=3008 vite dev",
     "start:dev": "nodemon index.ts && cross-env PORT=3008 vite dev",
     "start:prod": "node index.js",
