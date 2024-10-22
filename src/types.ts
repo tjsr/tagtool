@@ -1,4 +1,4 @@
-import { ExpressServerConfig } from './types/expressConfig.js';
+import { ExpressServerConfig } from '@tjsr/express-server-helper';
 import { uuid5 } from '@tjsr/user-session-middleware';
 
 export type UserId = uuid5;
