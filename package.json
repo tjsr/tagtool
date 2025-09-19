@@ -113,7 +113,7 @@
     "rimraf": "$rimraf"
   },
   "optionalDependencies": {
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.10"
   },
   "browserslist": {
     "production": [
