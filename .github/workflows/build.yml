@@ -37,7 +37,7 @@ jobs:
         docker pull ghcr.io/tjsr/node_patched_npm:20.15.1-alpine3.20-npm10.8.2
 
     - name: Build API image
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: .
         builder: ${{ steps.buildx.outputs.name }}
