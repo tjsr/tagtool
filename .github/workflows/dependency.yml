@@ -7,7 +7,7 @@ on:
         type: choice
         description: 'Environment ID (required)'
         required: true
-        default: 'dev'
+        default: '@tjsr/user-session-middleware'
         options:
         - '@tjsr/user-session-middleware'
         - '@tjsr/mysql-pool-utils'
@@ -48,7 +48,7 @@ jobs:
       # Setup .npmrc file to publish to GitHub Packages
       - uses: actions/setup-node@v7
         with:
-          node-version: 20.15.1
+          node-version: 22
           cache: 'npm'
           registry-url: 'https://npm.pkg.github.com'
           # Defaults to the user or organization that owns the workflow file
