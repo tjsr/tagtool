@@ -27,7 +27,7 @@ the shared document cannot be fetched and qualify any install/test recipes below
   and CI checks separately with head SHA and PR/run links. Missing workflows,
   package grants, job permissions, approvals, or Dependabot/fork secret access
   remain blockers; an older green run is insufficient.
-- For new verification work, use Node 24 primarily, Node 22 where supported,
+- For new verification work, use Node 24 primarily, Node 26 where supported,
   and latest npm compatible with the declared engine floor. Check the actual
   supported matrix; this does not authorize CI/runtime/dependency changes.
 - No direct-main push, approval/merge/auto-merge, release, deployment, settings
