@@ -89,7 +89,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "express-session": "^1.18.0",
     "linkteam": "^0.0.17",
-    "minimatch": "^10.0.1",
+    "minimatch": "^11.0.1",
     "mock-session": "^0.0.5",
     "openapi-typescript": "^7.9.1",
     "prettier": "^3.9.10",
