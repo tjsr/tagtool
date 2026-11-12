@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { validateObjectId } from './validateObjectId.js';
+
+import { validateObjectId } from './validateObjectId.ts';
 
 describe('validateObjectId', () => {
   test('Should allow sane sized tag', () => {

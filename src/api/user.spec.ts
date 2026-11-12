@@ -1,9 +1,10 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import { SESSION_ID_HEADER } from './apiUtils.js';
-import { TagtoolUserSessionData } from '../types/session.js';
+
+import { SESSION_ID_HEADER } from './apiUtils.ts';
+import { TagtoolUserSessionData } from '../types/session.ts';
 import express from 'express';
 import session from 'express-session';
-import { startApp } from '../server.js';
+import { startApp } from '../server.ts';
 import supertest from 'supertest';
 
 describe('API tests for tags', () => {

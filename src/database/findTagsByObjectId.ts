@@ -1,5 +1,5 @@
 import { FieldPacket, QueryResult } from 'mysql2/promise';
-import { ObjectId, Tag, UserId } from '../types.js';
+import { ObjectId, Tag, UserId } from '../types.ts';
 import { getConnection, mysqlQuery, safeReleaseConnection } from '@tjsr/mysql-pool-utils';
 
 type TagQueryResult = [ObjectId, UserId, string];

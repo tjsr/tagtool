@@ -1,6 +1,6 @@
 import { UserModel, createUserIdFromEmail } from '@tjsr/user-session-middleware';
 
-import { EmailAddress } from '../types.js';
+import { EmailAddress } from '../types.ts';
 
 export const getDbUserByEmail = (email: EmailAddress): UserModel => {
   return {

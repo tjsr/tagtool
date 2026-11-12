@@ -13,6 +13,7 @@ console.log('envFilePath:', envFilePath);
 export default defineConfig({
   test: {
     env: {
+      BASE_PROJECT_PATH: envFilePath,
       DOTENV_DEBUG: 'false',
       DOTENV_FLOW_PATH: path.dirname(testEnvFile) || '.env.test',
       DOTENV_FLOW_PATTERN: '.env.test',

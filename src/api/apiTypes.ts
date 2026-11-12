@@ -1,4 +1,4 @@
-import { ObjectId } from '../types.js';
+import { ObjectId } from '../types.ts';
 
 export interface TagResponse {
   objectId: ObjectId;

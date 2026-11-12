@@ -1,7 +1,7 @@
 import { ParamsDictionary, Query } from 'express-serve-static-core';
 import { SystemHttpRequestType, SystemHttpResponseType, SystemResponseLocals } from '@tjsr/user-session-middleware';
 
-import { TagtoolUserSessionData } from './session.js';
+import { TagtoolUserSessionData } from './session.ts';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
