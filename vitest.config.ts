@@ -19,6 +19,7 @@ export default defineConfig({
     },
     globals: true,
     include: ['**/*.test.tsx', '**/*.test.ts'],
+    exclude: ['test/**', '**/node_modules/**', '**/dist/**'],
     setupFiles: [setupTestPath],
   },
 });

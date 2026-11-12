@@ -11,6 +11,10 @@
     "clean": "npx rimraf dist build",
     "clean:all": "npm run clean && npx rimraf build coverage dist node_modules",
     "test": "tsc && vitest --run && npm run lint",
+    "test:worker": "vitest run --config vitest.workers.config.ts",
+    "check:worker": "wrangler deploy --dry-run",
+    "dev:worker": "wrangler dev --local",
+    "db:worker:local": "wrangler d1 migrations apply tagtool-local --local",
     "start:frontend": "cross-env GENERATE_SOURCEMAP=true PORT=3008 vite dev",
     "start:dev": "nodemon index.ts && cross-env PORT=3008 vite dev",
     "start:prod": "node index.js",
@@ -67,6 +71,7 @@
     "web-vitals": "^6.2.3"
   },
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.8.1",
     "@eslint/js": "^9.37.0",
     "@prisma/client": "^6.16.3",
     "@tjsr/eslint-config": "github:tjsr/eslint-config#main",
@@ -103,7 +108,8 @@
     "typescript-eslint": "^8.72.1",
     "vite": "^7.3.7",
     "vitest": "^4.1.12",
-    "vitest-mock-express": "^2.2.0"
+    "vitest-mock-express": "^2.2.0",
+    "wrangler": "^4.161.0"
   },
   "overrides": {
     "mysql2": ">=3.10.0",
