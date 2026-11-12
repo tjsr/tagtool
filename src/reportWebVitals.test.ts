@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
-import reportWebVitals from './reportWebVitals.js';
+import reportWebVitals from './reportWebVitals.ts';
 
 vi.mock('web-vitals', () => ({
   onCLS: vi.fn(),
