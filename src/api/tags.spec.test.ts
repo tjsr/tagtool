@@ -1,5 +1,5 @@
-import { ObjectId, UserId } from '../types.ts';
-import { TaskContext, afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import { ObjectId, UserId } from '../types.js';
+import { TestContext, afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { UserSessionData, createRandomId, createRandomUserId } from '@tjsr/user-session-middleware';
 import { closeConnectionPool, verifyDatabaseReady } from '@tjsr/mysql-pool-utils';
 import { createTestObjectId, createTestSessionId, createTestUserId } from '../testUtils.ts';
@@ -15,7 +15,7 @@ import session from 'express-session';
 import { startApp } from '../server.ts';
 import supertest from 'supertest';
 
-type TagTestContext = TaskContext & {
+type TagTestContext = TestContext & {
   app: express.Express;
   generatedObjectId: ObjectId;
   generatedTag: string;
