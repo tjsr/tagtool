@@ -1,6 +1,8 @@
 import { applyD1Migrations, type D1Migration } from 'cloudflare:test';
 import { env } from 'cloudflare:workers';
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { exportJWK, generateKeyPair, SignJWT } from 'jose';
+import { v5 as uuidv5 } from 'uuid';
 import worker from '../src/worker.js';
 
 const bindings = env as Env & { TEST_MIGRATIONS: D1Migration[] };
@@ -15,6 +17,7 @@ beforeAll(async () => applyD1Migrations(bindings.DB, bindings.TEST_MIGRATIONS));
 beforeEach(async () => {
   await bindings.DB.prepare('DELETE FROM Tags').run();
   await bindings.DB.prepare('DELETE FROM session').run();
+  await bindings.DB.prepare('DELETE FROM GoogleIdentity').run();
 });
 
 describe('Tagtool Worker', () => {
@@ -78,5 +81,39 @@ describe('Tagtool Worker', () => {
       .bind('legacy-session', JSON.stringify({ userId: owner }), Math.floor(Date.now() / 1000) + 3600).run();
     const response = await call('/tags/pin-1', { headers: { 'x-session-id': 'legacy-session' } });
     expect(await response.json()).toEqual({ objectId: 'pin-1', tags: [{ tag: 'rare', count: 1, isOwner: true }] });
+  });
+
+  it('accepts only verified Google credentials, rotates sessions, and keeps stable ownership', async () => {
+    const keys = await generateKeyPair('RS256', { extractable: true });
+    const publicKey = await exportJWK(keys.publicKey);
+    publicKey.kid = 'test-key';
+    publicKey.alg = 'RS256';
+    const mockedFetch = vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+      Response.json({ keys: [publicKey] }, { headers: { 'Cache-Control': 'max-age=60' } }));
+    const namespace = '12345678-1234-4234-8234-123456789012';
+    const configured = { ...bindings, GOOGLE_CLIENT_ID: 'test-client', USERID_UUID_NAMESPACE: namespace };
+    const token = async (email: string, audience = 'test-client', verified = true) => new SignJWT({
+      email, email_verified: verified,
+    }).setProtectedHeader({ alg: 'RS256', kid: 'test-key' }).setIssuer('https://accounts.google.com')
+      .setAudience(audience).setSubject('google-subject').setIssuedAt().setExpirationTime('5m').sign(keys.privateKey);
+    const login = async (sessionId: string, credential: string) => worker.fetch(new Request('https://tagtool.test/login', {
+      method: 'POST', headers: { 'content-type': 'application/json', 'x-session-id': sessionId },
+      body: JSON.stringify({ credential }),
+    }), configured);
+    try {
+      const session = await createSession();
+      expect((await login(session.sessionId, await token('alice@gmail.com', 'wrong-client'))).status).toBe(401);
+      expect((await login(session.sessionId, await token('alice@example.org'))).status).toBe(401);
+      expect((await login(session.sessionId, await token('alice@gmail.com', 'test-client', false))).status).toBe(401);
+      const authenticated = await login(session.sessionId, await token('alice@gmail.com'));
+      expect(authenticated.status).toBe(200);
+      const auth = await authenticated.json() as { sessionId: string; userId: string };
+      expect(auth.userId).toBe(uuidv5('alice@gmail.com', namespace));
+      expect((await call('/user', { headers: { 'x-session-id': session.sessionId } })).status).toBe(401);
+      const next = await login(auth.sessionId, await token('new-name@gmail.com'));
+      expect((await next.json() as { userId: string }).userId).toBe(auth.userId);
+    } finally {
+      mockedFetch.mockRestore();
+    }
   });
 });

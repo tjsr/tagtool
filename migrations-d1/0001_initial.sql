@@ -19,3 +19,9 @@ CREATE TABLE "session" (
   "expire" INTEGER NOT NULL
 );
 CREATE INDEX "session_expire_idx" ON "session" ("expire");
+
+-- Stable Google subjects keep the same user ID when an account email changes.
+CREATE TABLE "GoogleIdentity" (
+  "subject" TEXT NOT NULL PRIMARY KEY,
+  "userId" TEXT NOT NULL UNIQUE
+);

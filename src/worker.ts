@@ -1,3 +1,6 @@
+import { validate as isUuid, v5 as uuidv5 } from 'uuid';
+import { verifyGoogleCredential } from './googleAuth.js';
+
 type Session = { userId: string };
 type TagRow = { tag: string; createdByUserId: string };
 
@@ -92,7 +95,35 @@ const handle = async (request: Request, env: Env): Promise<Response> => {
     return newSession(env, sessionId);
   }
   if (url.pathname === '/login') {
-    return json({ message: 'Sign-in migration is not configured.' }, 501);
+    if (request.method !== 'POST') return json({ message: 'Method not allowed' }, 405);
+    if (!session || !sessionId) return json({ message: 'A valid session is required' }, 401);
+    if (!env.GOOGLE_CLIENT_ID || !isUuid(env.USERID_UUID_NAMESPACE)) {
+      return json({ message: 'Sign-in is not configured' }, 503);
+    }
+    let body: unknown;
+    try {
+      body = await readBody(request);
+    } catch {
+      return json({ message: 'Invalid request body' }, 400);
+    }
+    if (typeof body !== 'object' || !body || !('credential' in body) || typeof body.credential !== 'string') {
+      return json({ message: 'Google credential required' }, 400);
+    }
+    let identity: { subject: string; email: string };
+    try {
+      identity = await verifyGoogleCredential(body.credential, env.GOOGLE_CLIENT_ID);
+    } catch {
+      return json({ message: 'Invalid Google credential' }, 401);
+    }
+    // Preserve the original email-derived identifier on first sign-in, then
+    // retain the stable Google subject mapping even if the email changes.
+    const legacyUserId = uuidv5(identity.email, env.USERID_UUID_NAMESPACE);
+    await env.DB.prepare('INSERT INTO GoogleIdentity (subject, userId) VALUES (?, ?) ON CONFLICT DO NOTHING')
+      .bind(identity.subject, legacyUserId).run();
+    const linked = await env.DB.prepare('SELECT userId FROM GoogleIdentity WHERE subject = ?')
+      .bind(identity.subject).first<{ userId: string }>();
+    if (!linked) return json({ message: 'Identity already linked to another account' }, 409);
+    return newSession(env, sessionId, { userId: linked.userId });
   }
 
   const match = /^\/tags\/([^/]+)$/.exec(url.pathname);

@@ -39,7 +39,8 @@ try {
     { sql: 'SELECT id, email FROM User ORDER BY id', name: 'User', columns: ['id', 'email'] },
     { sql: 'SELECT CAST(id AS CHAR) AS id, objectId, tag, createdByUserId FROM Tags ORDER BY id',
       name: 'Tags', columns: ['id', 'objectId', 'tag', 'createdByUserId'] },
-    { sql: 'SELECT session_id, sess, CAST(UNIX_TIMESTAMP(expire) AS UNSIGNED) AS expire FROM session WHERE expire > NOW() ORDER BY session_id',
+    // Email-only login did not verify identity. Never carry those sessions over.
+    { sql: "SELECT session_id, sess, CAST(UNIX_TIMESTAMP(expire) AS UNSIGNED) AS expire FROM session WHERE expire > NOW() AND JSON_CONTAINS_PATH(sess, 'one', '$.email') = 0 ORDER BY session_id",
       name: 'session', columns: ['session_id', 'sess', 'expire'] },
   ];
   for (const table of tables) {

@@ -3,6 +3,10 @@
   "name": "tagtool",
   "main": "src/worker.ts",
   "compatibility_date": "2026-11-10",
+  "vars": {
+    "GOOGLE_CLIENT_ID": "",
+    "USERID_UUID_NAMESPACE": ""
+  },
   "observability": { "enabled": true, "traces": { "enabled": true } },
   // The all-zero ID is for local development only. Replace it with a separately
   // provisioned D1 ID before deploying; do not use production data in previews.
