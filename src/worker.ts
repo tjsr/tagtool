@@ -109,15 +109,15 @@ const handle = async (request: Request, env: Env): Promise<Response> => {
     if (typeof body !== 'object' || !body || !('credential' in body) || typeof body.credential !== 'string') {
       return json({ message: 'Google credential required' }, 400);
     }
-    let identity: { subject: string; email: string };
+    let identity: { subject: string; legacyEmail?: string };
     try {
       identity = await verifyGoogleCredential(body.credential, env.GOOGLE_CLIENT_ID);
     } catch {
       return json({ message: 'Invalid Google credential' }, 401);
     }
-    // Preserve the original email-derived identifier on first sign-in, then
-    // retain the stable Google subject mapping even if the email changes.
-    const legacyUserId = uuidv5(identity.email, env.USERID_UUID_NAMESPACE);
+    // Only claim legacy email ownership when Google is authoritative for that
+    // mailbox. Other Google accounts receive a separate stable subject mapping.
+    const legacyUserId = identity.legacyEmail ? uuidv5(identity.legacyEmail, env.USERID_UUID_NAMESPACE) : crypto.randomUUID();
     await env.DB.prepare('INSERT INTO GoogleIdentity (subject, userId) VALUES (?, ?) ON CONFLICT DO NOTHING')
       .bind(identity.subject, legacyUserId).run();
     const linked = await env.DB.prepare('SELECT userId FROM GoogleIdentity WHERE subject = ?')

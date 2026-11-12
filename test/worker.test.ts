@@ -92,19 +92,18 @@ describe('Tagtool Worker', () => {
       Response.json({ keys: [publicKey] }, { headers: { 'Cache-Control': 'max-age=60' } }));
     const namespace = '12345678-1234-4234-8234-123456789012';
     const configured = { ...bindings, GOOGLE_CLIENT_ID: 'test-client', USERID_UUID_NAMESPACE: namespace };
-    const token = async (email: string, audience = 'test-client', verified = true) => new SignJWT({
+    const token = async (email: string, audience = 'test-client', verified = true, subject = 'google-subject') => new SignJWT({
       email, email_verified: verified,
     }).setProtectedHeader({ alg: 'RS256', kid: 'test-key' }).setIssuer('https://accounts.google.com')
-      .setAudience(audience).setSubject('google-subject').setIssuedAt().setExpirationTime('5m').sign(keys.privateKey);
+      .setAudience(audience).setSubject(subject).setIssuedAt().setExpirationTime('5m').sign(keys.privateKey);
     const login = async (sessionId: string, credential: string) => worker.fetch(new Request('https://tagtool.test/login', {
       method: 'POST', headers: { 'content-type': 'application/json', 'x-session-id': sessionId },
       body: JSON.stringify({ credential }),
     }), configured);
     try {
       const session = await createSession();
+      expect((await login(session.sessionId, 'google-subject')).status).toBe(401);
       expect((await login(session.sessionId, await token('alice@gmail.com', 'wrong-client'))).status).toBe(401);
-      expect((await login(session.sessionId, await token('alice@example.org'))).status).toBe(401);
-      expect((await login(session.sessionId, await token('alice@gmail.com', 'test-client', false))).status).toBe(401);
       const authenticated = await login(session.sessionId, await token('alice@gmail.com'));
       expect(authenticated.status).toBe(200);
       const auth = await authenticated.json() as { sessionId: string; userId: string };
@@ -112,6 +111,13 @@ describe('Tagtool Worker', () => {
       expect((await call('/user', { headers: { 'x-session-id': session.sessionId } })).status).toBe(401);
       const next = await login(auth.sessionId, await token('new-name@gmail.com'));
       expect((await next.json() as { userId: string }).userId).toBe(auth.userId);
+      const otherSession = await createSession();
+      const otherLogin = await login(otherSession.sessionId, await token('alice@example.org', 'test-client', true, 'other-subject'));
+      expect(otherLogin.status).toBe(200);
+      const otherAuth = await otherLogin.json() as { sessionId: string; userId: string };
+      expect(otherAuth.userId).not.toBe(uuidv5('alice@example.org', namespace));
+      const again = await login(otherAuth.sessionId, await token('alice@example.org', 'test-client', false, 'other-subject'));
+      expect((await again.json() as { userId: string }).userId).toBe(otherAuth.userId);
     } finally {
       mockedFetch.mockRestore();
     }

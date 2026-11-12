@@ -18,9 +18,10 @@ used by the existing Tagtool installation. The client ID and namespace in the
 local configuration are deliberately blank. A successful login rotates the
 session ID, associates Google's stable subject with the legacy email-derived
 user ID, and returns the new session ID. Clients must replace their stored ID.
-Only Google-authoritative verified Gmail and Workspace addresses may claim legacy
-email-derived ownership; other email addresses need a separate verified migration
-path. Google account email changes retain ownership after the first verified link.
+Any valid Google subject can sign in. Only Google-authoritative verified Gmail
+and Workspace addresses may claim legacy email-derived ownership; other addresses
+receive a separate account and need a separate verified migration path to recover
+legacy tags. Google account email changes retain ownership after the first link.
 Email verification for other addresses is tracked in
 https://github.com/tjsr/tagtool/issues/265.
 
