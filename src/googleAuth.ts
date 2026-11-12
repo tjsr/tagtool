@@ -1,11 +1,9 @@
 import { type JWTVerifyGetKey, createRemoteJWKSet, jwtVerify } from 'jose';
 
-const googleKeys = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
-
 export const verifyGoogleCredential = async (
   credential: string,
   clientId: string,
-  key: JWTVerifyGetKey = googleKeys
+  key: JWTVerifyGetKey = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
 ): Promise<{ subject: string; email: string }> => {
   if (!clientId) throw new Error('Google client ID is not configured');
   const { payload } = await jwtVerify(credential, key, {

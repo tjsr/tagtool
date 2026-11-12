@@ -83,6 +83,12 @@ jobs:
     - name: Run tests
       run: npm test
 
+    - name: Rehearse MySQL export and local D1 import
+      run: |
+        node scripts/export-mysql-for-d1.mjs "$RUNNER_TEMP/tagtool-test.d1-export.sql"
+        npx wrangler d1 migrations apply tagtool-local --local
+        npx wrangler d1 execute tagtool-local --local --file "$RUNNER_TEMP/tagtool-test.d1-export.sql"
+
     - name: Build
       run: npm run build
 

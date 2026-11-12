@@ -3,7 +3,9 @@
 `npm run db:worker:local` applies the D1 schema to an isolated local database;
 `npm run dev:worker` runs the Worker locally, and `npm run test:worker` exercises
 the Worker against local D1. `npm run check:worker` packages it without deployment.
-The all-zero database ID in `wrangler.jsonc` is a local placeholder, not a production binding.
+The all-zero default database ID in `wrangler.jsonc` is a local placeholder,
+not a production binding. The `dev` environment uses the separate `tagtool-dev`
+D1 database and has no public Worker route or preview URL.
 
 The Worker is not ready for production: the MySQL export, import, client changes,
 Google OAuth settings and cutover must be validated with representative data.
@@ -20,6 +22,7 @@ Only Google-authoritative verified Gmail and Workspace addresses may claim legac
 email-derived ownership; other email addresses need a separate verified migration
 path. Google account email changes retain ownership after the first verified link.
 
+Restore a MySQL dump into an isolated development MySQL database first. Then
 `node scripts/export-mysql-for-d1.mjs <new-file.d1-export.sql>` exports a
 consistent read-only snapshot from the MySQL connection described by `MYSQL_HOST`,
 `MYSQL_PORT`, `MYSQL_DATABASE`, `MYSQL_USER` and `MYSQL_PASSWORD`. The file contains
