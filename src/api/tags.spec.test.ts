@@ -1,18 +1,18 @@
-import { ObjectId, UserId } from '../types.js';
+import { ObjectId, UserId } from '../types.ts';
 import { TaskContext, afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { UserSessionData, createRandomId, createRandomUserId } from '@tjsr/user-session-middleware';
 import { closeConnectionPool, verifyDatabaseReady } from '@tjsr/mysql-pool-utils';
-import { createTestObjectId, createTestSessionId, createTestUserId } from '../testUtils.js';
+import { createTestObjectId, createTestSessionId, createTestUserId } from '../testUtils.ts';
 
-import { SESSION_ID_HEADER } from './apiUtils.js';
-import { TagResponse } from './apiTypes.js';
-import { TagtoolUserSessionData } from '../types/session.js';
-import { connectionDetails } from '../setup-tests.js';
+import { SESSION_ID_HEADER } from './apiUtils.ts';
+import { TagResponse } from './apiTypes.ts';
+import { TagtoolUserSessionData } from '../types/session.ts';
+import { connectionDetails } from '../setup-tests.ts';
 import express from 'express';
-import { insertTag } from '../database/insertTag.js';
+import { insertTag } from '../database/insertTag.ts';
 import { randomUUID } from 'crypto';
 import session from 'express-session';
-import { startApp } from '../server.js';
+import { startApp } from '../server.ts';
 import supertest from 'supertest';
 
 type TagTestContext = TaskContext & {

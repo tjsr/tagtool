@@ -1,4 +1,4 @@
-import { ObjectId, UserId } from '../types.js';
+import { ObjectId, UserId } from '../types.ts';
 
 import { deleteFromTable } from '@tjsr/mysql-pool-utils';
 

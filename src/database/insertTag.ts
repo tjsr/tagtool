@@ -1,4 +1,4 @@
-import { ObjectId, UserId } from '../types.js';
+import { ObjectId, UserId } from '../types.ts';
 
 import { basicMySqlInsert } from '@tjsr/mysql-pool-utils';
 
@@ -9,4 +9,3 @@ export const insertTag = async (createdByUserId: UserId, objectId: ObjectId, tag
     tag,
   });
 };
-

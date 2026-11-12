@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ObjectId, Tag, UserId } from '../types.js';
-import { TagResponse, TagResponseElement } from './apiTypes.js';
-import { TagtoolRequest, TagtoolResponse } from '../types/request.js';
+import { ObjectId, Tag, UserId } from '../types.ts';
+import { TagResponse, TagResponseElement } from './apiTypes.ts';
+import { TagtoolRequest, TagtoolResponse } from '../types/request.ts';
 import { endWithJsonMessage, express, getUserIdFromRequest, getUserIdFromSession } from '@tjsr/user-session-middleware';
 
 import assert from 'node:assert';
-import { asyncHandlerWrap } from '../utils/asyncHandlerWrap.js';
-import { deleteOwnedTag } from '../database/deleteOwnedTag.js';
-import { findTagsByObjectId } from '../database/findTagsByObjectId.js';
-import { insertTag } from '../database/insertTag.js';
-import { validateObjectId } from '../utils/validateObjectId.js';
-import { validateTag } from '../utils/validateTag.js';
+import { asyncHandlerWrap } from '../utils/asyncHandlerWrap.ts';
+import { deleteOwnedTag } from '../database/deleteOwnedTag.ts';
+import { findTagsByObjectId } from '../database/findTagsByObjectId.ts';
+import { insertTag } from '../database/insertTag.ts';
+import { validateObjectId } from '../utils/validateObjectId.ts';
+import { validateTag } from '../utils/validateTag.ts';
 
 const checkObjectExists = async (id: ObjectId): Promise<boolean> => {
   // TODO: This is way too simple to be complete - must be something to do here.

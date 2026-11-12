@@ -1,12 +1,12 @@
 import { SessionHandlerError, validateHasUserId } from '@tjsr/user-session-middleware';
-import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.js';
+import { addTag, deleteTags, getTags, validateObjectExists, validateTags } from './api/tags.ts';
 
 import { ExpressServerHelper } from '@tjsr/express-server-helper';
-import { TagtoolConfig } from './types.js';
-import { TagtoolRequest } from './types/request.js';
-import { asyncHandlerWrap } from './utils/asyncHandlerWrap.js';
+import { TagtoolConfig } from './types.ts';
+import { TagtoolRequest } from './types/request.ts';
+import { asyncHandlerWrap } from './utils/asyncHandlerWrap.ts';
 import express from 'express';
-import { getUser } from './api/user.js';
+import { getUser } from './api/user.ts';
 
 export const DEFAULT_HTTP_PORT = 8242;
 

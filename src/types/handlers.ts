@@ -5,9 +5,9 @@ import {
   UserSessionMiddlewareRequestHandler,
   express,
 } from '@tjsr/user-session-middleware';
-import { TagtoolRequest, TagtoolResponse, TagtoolResponseLocals } from './request.js';
+import { TagtoolRequest, TagtoolResponse, TagtoolResponseLocals } from './request.ts';
 
-import { TagtoolUserSessionData } from './session.js';
+import { TagtoolUserSessionData } from './session.ts';
 
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */

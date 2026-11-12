@@ -1,4 +1,4 @@
-import { DEFAULT_HTTP_PORT, startApp } from './src/server.js';
+import { DEFAULT_HTTP_PORT, startApp } from './src/server.ts';
 import { UserSessionOptions, getMysqlSessionStore } from '@tjsr/user-session-middleware';
 import { intEnv, loadEnv, requireEnv } from '@tjsr/simple-env-utils';
 
