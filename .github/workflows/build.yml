@@ -71,3 +71,4 @@ jobs:
           node scripts/export-mysql-for-d1.mjs "$RUNNER_TEMP/tagtool-test.d1-export.sql"
           npx wrangler d1 migrations apply tagtool-local --local
           npx wrangler d1 execute tagtool-local --local --file "$RUNNER_TEMP/tagtool-test.d1-export.sql"
+          npx wrangler d1 execute tagtool-local --local --json --command "SELECT (SELECT COUNT(*) FROM Tags WHERE id = '9223372036854775807' AND createdByUserId = 'fixture-owner') AS tags, (SELECT COUNT(*) FROM session WHERE session_id = 'fixture-anonymous') AS anonymous, (SELECT COUNT(*) FROM session WHERE session_id = 'fixture-email') AS email" | node -e "let s=''; process.stdin.on('data', c => s+=c); process.stdin.on('end', () => { const r=JSON.parse(s)[0].results[0]; if (r.tags!==1 || r.anonymous!==1 || r.email!==0) process.exit(1); });"

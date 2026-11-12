@@ -19,6 +19,15 @@ for migration in prisma/migrations/*/migration.sql; do
   mysql_as_root < "$migration"
 done
 
+# A large historical ID and two kinds of session exercise migration safety.
+mysql_as_root <<'SQL'
+INSERT INTO Tags (id, objectId, tag, createdByUserId)
+VALUES (9223372036854775807, 'fixture-object', 'fixture-tag', 'fixture-owner');
+INSERT INTO session (session_id, sess, expire) VALUES
+  ('fixture-anonymous', '{"userId":"fixture-owner"}', DATE_ADD(NOW(), INTERVAL 1 DAY)),
+  ('fixture-email', '{"userId":"fixture-owner","email":"fixture@example.test"}', DATE_ADD(NOW(), INTERVAL 1 DAY));
+SQL
+
 # Give the migration rehearsal read-only access to the fixture.
 mysql_as_root <<'SQL'
 CREATE USER 'testuser'@'%' IDENTIFIED BY 'testpassword';
