@@ -21,6 +21,8 @@ user ID, and returns the new session ID. Clients must replace their stored ID.
 Only Google-authoritative verified Gmail and Workspace addresses may claim legacy
 email-derived ownership; other email addresses need a separate verified migration
 path. Google account email changes retain ownership after the first verified link.
+Email verification for other addresses is tracked in
+https://github.com/tjsr/tagtool/issues/265.
 
 Restore a MySQL dump into an isolated development MySQL database first. Then
 `node scripts/export-mysql-for-d1.mjs <new-file.d1-export.sql>` exports a

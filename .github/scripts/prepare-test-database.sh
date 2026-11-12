@@ -19,9 +19,8 @@ for migration in prisma/migrations/*/migration.sql; do
   mysql_as_root < "$migration"
 done
 
-# Match scripts/privs.api.template: only the session table permits DELETE.
+# Give the migration rehearsal read-only access to the fixture.
 mysql_as_root <<'SQL'
 CREATE USER 'testuser'@'%' IDENTIFIED BY 'testpassword';
-GRANT SELECT, INSERT, UPDATE ON testdb.* TO 'testuser'@'%';
-GRANT DELETE ON testdb.session TO 'testuser'@'%';
+GRANT SELECT ON testdb.* TO 'testuser'@'%';
 SQL
