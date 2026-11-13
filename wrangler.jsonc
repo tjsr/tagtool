@@ -20,7 +20,7 @@
   "env": {
     "dev": {
       "name": "tagtool-dev",
-      "workers_dev": false,
+      "workers_dev": true,
       "preview_urls": false,
       "vars": { "GOOGLE_CLIENT_ID": "", "USERID_UUID_NAMESPACE": "", "INTEGRATION_PROVIDERS": "[]" },
       "d1_databases": [{
