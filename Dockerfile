@@ -1,7 +1,9 @@
-ARG NODE_VERSION=22.16.0
-ARG ALPINE_VERSION=3.22
+ARG NODE_VERSION=24.19.0
+ARG ALPINE_VERSION=3.23
 ARG NPM_VERSION=11.4.0
-FROM ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION} AS tagtool-build-preflight
+ARG NODE_IMAGE=ghcr.io/tjsr/node_patched_npm:${NODE_VERSION}-alpine${ALPINE_VERSION}-npm${NPM_VERSION}
+ARG NODE_RUNTIME_IMAGE=node:${NODE_VERSION}-alpine${ALPINE_VERSION}
+FROM ${NODE_IMAGE} AS tagtool-build-preflight
 
 WORKDIR /opt/tagtool
 
@@ -30,7 +32,7 @@ RUN --mount=type=secret,id=github --mount=type=cache,target=/root/.npm \
   npm ci --omit=dev --no-fund && \
   rm -f /root/.npmrc
 
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION}
+FROM ${NODE_RUNTIME_IMAGE}
 COPY --from=tagtool-build /opt/tagtool/dist /opt/tagtool
 COPY package.json /opt/tagtool
 COPY --from=tagtool-runtimes /opt/tagtool/node_modules /opt/tagtool/node_modules
