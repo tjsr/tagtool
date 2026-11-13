@@ -1,28 +1,43 @@
 name: Build Tagtool
-run-name: ${{ github.actor }} Running Tagtool build.
-on: 
+on:
   push:
-    paths-ignore:
-      - '.github/workflows/dependency.yml'
   pull_request:
 permissions:
   contents: read
   packages: read
 
 jobs:
-  verify:
-    name: Test and build without publishing
+  worker:
+    name: Verify Worker and local D1
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@tjsr'
+          cache: npm
+      - run: npm ci --allow-git=root
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:worker
+
+  migration-rehearsal:
+    name: Rehearse one-time MySQL to D1 import
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
       mysql:
-        # Match the existing Compose test environment; this is not a deployment.
         image: mysql:5.7.44
         env:
           MYSQL_ROOT_PASSWORD: ci-only-root-password
           MYSQL_DATABASE: testdb
         ports:
-        - 3306/tcp
+          - 3306/tcp
         options: >-
           --health-cmd="mysqladmin ping --host=127.0.0.1 --user=root --password=ci-only-root-password --silent"
           --health-interval=5s
@@ -36,78 +51,24 @@ jobs:
       MYSQL_USER: testuser
       MYSQL_PASSWORD: testpassword
     steps:
-    - name: Check out repository code
-      uses: actions/checkout@v7
-
-    - name: Prepare isolated test database
-      env:
-        CI_MYSQL_CONTAINER: ${{ job.services.mysql.id }}
-        MYSQL_PORT: ${{ job.services.mysql.ports['3306'] }}
-      run: |
-        printf 'MYSQL_PORT=%s\n' "$MYSQL_PORT" >> "$GITHUB_ENV"
-        printf 'PRISMA_DATABASE_URL=mysql://testuser:testpassword@127.0.0.1:%s/testdb\n' "$MYSQL_PORT" >> "$GITHUB_ENV"
-        bash .github/scripts/prepare-test-database.sh
-
-    - name: Use Node.js 24
-      uses: actions/setup-node@v7
-      with:
-        node-version: 24
-        registry-url: 'https://npm.pkg.github.com'
-        scope: '@tjsr'
-        cache: npm
-
-    - name: Use latest compatible npm
-      run: npm install --global npm@latest --registry=https://registry.npmjs.org
-
-    - name: Install locked dependencies
-      run: npm ci --allow-git=root
-
-    - name: Run tests
-      run: npm test
-
-    - name: Build
-      run: npm run build
-
-  build-tagtool:
-    runs-on: ubuntu-latest
-    env:
-      DOCKER_BUILDKIT: 1
-      BUILDKIT_PROGRESS: plain
-      DBMIGRATE_IMAGE: tjsrowe/tagtool:dbmigrate-${{ github.sha }}
-      API_IMAGE: tjsrowe/tagtool:${{ github.sha }}
-
-    steps:
-    - name: Check out repository code
-      uses: actions/checkout@v7
-
-    - name: Set up Docker Buildx
-      id: buildx
-      uses: docker/setup-buildx-action@master
-
-    - name: Login to Amazon ECR Public
-      id: login-ecr-public
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tjsr/tagtool' && github.actor != 'dependabot[bot]' }}
-      uses: aws-actions/amazon-ecr-login@v2
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ECR_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ECR_SECRET_ACCESS_KEY }}
-        AWS_REGION: us-east-1
-      with:
-        registry-type: public
-
-    - name: Pull patched node image
-      run: |
-        docker pull ghcr.io/tjsr/node_patched_npm:20.15.1-alpine3.20-npm10.8.2
-
-    - name: Build API image
-      uses: docker/build-push-action@v7
-      with:
-        context: .
-        builder: ${{ steps.buildx.outputs.name }}
-        secrets: |
-          github=${{ secrets.GITHUB_TOKEN }}
-        file: Dockerfile
-        push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tjsr/tagtool' && github.actor != 'dependabot[bot]' }}
-        tags: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tjsr/tagtool' && github.actor != 'dependabot[bot]' && format('{0}/', steps.login-ecr-public.outputs.registry) || ''}}${{ env.API_IMAGE }}
-        cache-from: type=gha
-        cache-to: type=gha
+      - uses: actions/checkout@v7
+      - name: Prepare isolated legacy fixture
+        env:
+          CI_MYSQL_CONTAINER: ${{ job.services.mysql.id }}
+          MYSQL_PORT: ${{ job.services.mysql.ports['3306'] }}
+        run: |
+          printf 'MYSQL_PORT=%s\n' "$MYSQL_PORT" >> "$GITHUB_ENV"
+          bash .github/scripts/prepare-test-database.sh
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@tjsr'
+          cache: npm
+      - run: npm ci --allow-git=root
+      - name: Export and import fixture
+        run: |
+          node scripts/export-mysql-for-d1.mjs "$RUNNER_TEMP/tagtool-test.d1-export.sql"
+          npx wrangler d1 migrations apply tagtool-local --local
+          npx wrangler d1 execute tagtool-local --local --file "$RUNNER_TEMP/tagtool-test.d1-export.sql"
+          npx wrangler d1 execute tagtool-local --local --json --command "SELECT (SELECT COUNT(*) FROM Tags WHERE id = '9223372036854775807' AND createdByUserId = 'fixture-owner') AS tags, (SELECT COUNT(*) FROM session WHERE session_id = 'fixture-anonymous') AS anonymous, (SELECT COUNT(*) FROM session WHERE session_id = 'fixture-email') AS email" | node -e "let s=''; process.stdin.on('data', c => s+=c); process.stdin.on('end', () => { const r=JSON.parse(s)[0].results[0]; if (r.tags!==1 || r.anonymous!==1 || r.email!==0) process.exit(1); });"

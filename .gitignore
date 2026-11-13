@@ -1,6 +1,8 @@
 src/generated
 coverage
 node_modules
+.wrangler/
+*.d1-export.sql
 container.bat
 build/
 dist/
