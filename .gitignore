@@ -2,6 +2,7 @@ src/generated
 coverage
 node_modules
 .wrangler/
+/data/
 *.d1-export.sql
 container.bat
 build/
