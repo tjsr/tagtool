@@ -1,0 +1,32 @@
+name: Check remote Worker configuration
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to validate
+        type: choice
+        required: true
+        options: [dev, production]
+permissions:
+  contents: read
+  packages: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.environment }}
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAGTOOL_TARGET: ${{ inputs.environment }}
+      TAGTOOL_DEV_D1_DATABASE_ID: ${{ vars.TAGTOOL_DEV_D1_DATABASE_ID }}
+      TAGTOOL_PRODUCTION_D1_DATABASE_ID: ${{ vars.TAGTOOL_PRODUCTION_D1_DATABASE_ID }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com
+          scope: '@tjsr'
+          cache: npm
+      - run: npm ci --allow-git=root
+      - run: node scripts/wrangler-environment.mjs "$TAGTOOL_TARGET" -- deploy --dry-run

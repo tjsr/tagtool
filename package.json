@@ -10,7 +10,7 @@
   "scripts": {
     "clean": "npx rimraf dist build",
     "clean:all": "npm run clean && npx rimraf build coverage dist node_modules",
-    "test": "tsc --noEmit && vitest run --config vitest.workers.config.ts && vitest run --config vitest.config.ts && npm run lint",
+    "test": "tsc --noEmit && node --test test/wrangler-environment.test.mjs && vitest run --config vitest.workers.config.ts && vitest run --config vitest.config.ts && npm run lint",
     "test:worker": "vitest run --config vitest.workers.config.ts",
     "check:worker": "wrangler deploy --dry-run",
     "dev:worker": "wrangler dev --local",

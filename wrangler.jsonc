@@ -29,6 +29,18 @@
         "database_id": "00000000-0000-0000-0000-000000000000",
         "migrations_dir": "migrations-d1"
       }]
+    },
+    "production": {
+      "name": "tagtool",
+      "workers_dev": false,
+      "preview_urls": false,
+      "vars": { "GOOGLE_CLIENT_ID": "", "USERID_UUID_NAMESPACE": "", "INTEGRATION_PROVIDERS": "[]" },
+      "d1_databases": [{
+        "binding": "DB",
+        "database_name": "tagtool-production",
+        "database_id": "00000000-0000-0000-0000-000000000000",
+        "migrations_dir": "migrations-d1"
+      }]
     }
   }
 }

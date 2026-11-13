@@ -3,9 +3,30 @@
 `npm run db:worker:local` applies the D1 schema to an isolated local database;
 `npm run dev:worker` runs the Worker locally, and `npm run test:worker` exercises
 the Worker against local D1. `npm run check:worker` packages it without deployment.
-The all-zero default database ID in `wrangler.jsonc` is a local placeholder,
-not a production binding. The `dev` environment uses the separate `tagtool-dev`
-D1 database and has no public Worker route or preview URL.
+All database IDs in the committed `wrangler.jsonc` are placeholders, including
+the local-only binding. Never deploy that file directly. The `dev` environment
+uses the separate `tagtool-dev` D1 database and has no public Worker route or
+preview URL.
+
+For remote operations, set `TAGTOOL_DEV_D1_DATABASE_ID` in the GitHub Actions
+`dev` environment and `TAGTOOL_PRODUCTION_D1_DATABASE_ID` in the GitHub Actions
+`production` environment when the production D1 database exists. A job must
+select the matching GitHub environment and pass the variable explicitly, for
+example `TAGTOOL_DEV_D1_DATABASE_ID: ${{ vars.TAGTOOL_DEV_D1_DATABASE_ID }}`
+under its `env` mapping. CI tests and local D1 use placeholders and do not need
+either real ID.
+
+The manual **Check remote Worker configuration** workflow selects the matching
+GitHub environment and runs a dry run with its variable. It does not deploy.
+
+Run Wrangler for a remote environment through the wrapper, for example
+`node scripts/wrangler-environment.mjs dev -- deploy --dry-run` or
+`node scripts/wrangler-environment.mjs production -- deploy --dry-run`.
+It requires the environment-specific variable, inserts the ID into a temporary
+config under ignored `.wrangler/`, and removes that file after Wrangler exits.
+For migrations use the corresponding D1 database name and explicit
+`--remote` after `d1 migrations apply`; validate the target before applying.
+The wrapper does not configure or deploy the Worker by itself.
 
 The Worker is not ready for production: the MySQL export, import, client changes,
 Google OAuth settings and cutover must be validated with representative data.
