@@ -1,7 +1,8 @@
 import { validate as isUuid, v5 as uuidv5 } from 'uuid';
 import { verifyGoogleCredential } from './googleAuth.js';
+import { verifyIntegrationAssertion } from './integrationAuth.js';
 
-type Session = { userId: string };
+type Session = { userId: string; anonymous?: boolean };
 type TagRow = { tag: string; createdByUserId: string };
 
 const SESSION_LIFETIME_SECONDS = 30 * 24 * 60 * 60;
@@ -26,20 +27,33 @@ const getSession = async (request: Request, env: Env): Promise<Session | undefin
   try {
     const session: unknown = JSON.parse(row.sess);
     if (typeof session === 'object' && session !== null && 'userId' in session &&
-      typeof session.userId === 'string' && session.userId.length > 0) return { userId: session.userId };
+      typeof session.userId === 'string' && session.userId.length > 0) {
+      return { anonymous: 'anonymous' in session && session.anonymous === true, userId: session.userId };
+    }
   } catch {
     // Treat malformed persisted sessions as invalid.
   }
   return undefined;
 };
 
-const newSession = async (env: Env, previousId?: string, previousSession?: Session): Promise<Response> => {
+const newSession = async (env: Env, previousId?: string, previousSession?: Session, transferFrom?: Session): Promise<Response> => {
   const sessionId = crypto.randomUUID();
-  const session = previousSession ?? { userId: crypto.randomUUID() };
-  const create = env.DB.prepare('INSERT INTO session (session_id, sess, expire) VALUES (?, ?, ?)')
-    .bind(sessionId, JSON.stringify(session), Math.floor(Date.now() / 1000) + SESSION_LIFETIME_SECONDS);
+  const session = previousSession ?? { anonymous: true, userId: crypto.randomUUID() };
+  const now = Math.floor(Date.now() / 1000);
+  const create = previousId
+    ? env.DB.prepare('INSERT INTO session (session_id, sess, expire) SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM session WHERE session_id = ? AND expire > ?)')
+      .bind(sessionId, JSON.stringify(session), now + SESSION_LIFETIME_SECONDS, previousId, now)
+    : env.DB.prepare('INSERT INTO session (session_id, sess, expire) VALUES (?, ?, ?)')
+      .bind(sessionId, JSON.stringify(session), now + SESSION_LIFETIME_SECONDS);
   if (previousId) {
-    await env.DB.batch([create, env.DB.prepare('DELETE FROM session WHERE session_id = ?').bind(previousId)]);
+    const statements: D1PreparedStatement[] = [];
+    if (transferFrom?.anonymous && transferFrom.userId !== session.userId) {
+      statements.push(env.DB.prepare("UPDATE Tags SET createdByUserId = ? WHERE createdByUserId = ? AND EXISTS (SELECT 1 FROM session WHERE session_id = ? AND expire > ? AND json_extract(sess, '$.anonymous') = 1 AND json_extract(sess, '$.userId') = ?)")
+        .bind(session.userId, transferFrom.userId, previousId, Math.floor(Date.now() / 1000), transferFrom.userId));
+    }
+    statements.push(create, env.DB.prepare('DELETE FROM session WHERE session_id = ?').bind(previousId));
+    const results = await env.DB.batch(statements);
+    if (results[results.length - 2].meta.changes !== 1) return json({ message: 'Invalid session' }, 401);
   } else {
     await create.run();
   }
@@ -94,6 +108,35 @@ const handle = async (request: Request, env: Env): Promise<Response> => {
   if (url.pathname === '/logout' && (request.method === 'GET' || request.method === 'POST')) {
     return newSession(env, sessionId);
   }
+  if (url.pathname === '/login/integration' && request.method === 'POST') {
+    if (!session || !sessionId) return json({ message: 'A valid session is required' }, 401);
+    let body: unknown;
+    try {
+      body = await readBody(request);
+    } catch {
+      return json({ message: 'Invalid request body' }, 400);
+    }
+    if (!body || typeof body !== 'object' || !('assertion' in body) || typeof body.assertion !== 'string') {
+      return json({ message: 'Signed assertion required' }, 400);
+    }
+    let assertion;
+    try {
+      assertion = await verifyIntegrationAssertion(body.assertion, sessionId, env.INTEGRATION_PROVIDERS);
+    } catch {
+      return json({ message: 'Invalid integration assertion' }, 401);
+    }
+    const now = Math.floor(Date.now() / 1000);
+    await env.DB.prepare('DELETE FROM UsedAssertion WHERE expires <= ?').bind(now).run();
+    const reserved = await env.DB.prepare('INSERT INTO UsedAssertion (issuer, assertionId, expires) VALUES (?, ?, ?) ON CONFLICT DO NOTHING RETURNING assertionId')
+      .bind(assertion.issuer, assertion.id, assertion.expires).first();
+    if (!reserved) return json({ message: 'Assertion already used' }, 401);
+    await env.DB.prepare('INSERT INTO IntegrationIdentity (issuer, subject, userId) VALUES (?, ?, ?) ON CONFLICT DO NOTHING')
+      .bind(assertion.issuer, assertion.subject, crypto.randomUUID()).run();
+    const identity = await env.DB.prepare('SELECT userId FROM IntegrationIdentity WHERE issuer = ? AND subject = ?')
+      .bind(assertion.issuer, assertion.subject).first<{ userId: string }>();
+    if (!identity) return json({ message: 'Identity unavailable' }, 500);
+    return newSession(env, sessionId, { anonymous: false, userId: identity.userId }, session);
+  }
   if (url.pathname === '/login') {
     if (request.method !== 'POST') return json({ message: 'Method not allowed' }, 405);
     if (!session || !sessionId) return json({ message: 'A valid session is required' }, 401);
@@ -123,7 +166,7 @@ const handle = async (request: Request, env: Env): Promise<Response> => {
     const linked = await env.DB.prepare('SELECT userId FROM GoogleIdentity WHERE subject = ?')
       .bind(identity.subject).first<{ userId: string }>();
     if (!linked) return json({ message: 'Identity already linked to another account' }, 409);
-    return newSession(env, sessionId, { userId: linked.userId });
+    return newSession(env, sessionId, { anonymous: false, userId: linked.userId }, session);
   }
 
   const match = /^\/tags\/([^/]+)$/.exec(url.pathname);
@@ -162,8 +205,9 @@ const handle = async (request: Request, env: Env): Promise<Response> => {
   if (request.method === 'POST') {
     const tag = 'tag' in body ? body.tag : undefined;
     if (typeof tag !== 'string' || !VALID_VALUE.test(tag)) return json({ message: 'Invalid tag' }, 400);
-    await env.DB.prepare('INSERT INTO Tags (id, objectId, tag, createdByUserId) VALUES (?, ?, ?, ?)')
-      .bind(crypto.randomUUID(), objectId, tag, session.userId).run();
+    const result = await env.DB.prepare('INSERT INTO Tags (id, objectId, tag, createdByUserId) SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM session WHERE session_id = ? AND expire > ?)')
+      .bind(crypto.randomUUID(), objectId, tag, session.userId, sessionId, Math.floor(Date.now() / 1000)).run();
+    if (!result.meta.changes) return json({ message: 'Invalid session' }, 401);
     return json({ sessionId, userId: session.userId });
   }
   if (request.method === 'DELETE') {

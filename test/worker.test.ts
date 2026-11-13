@@ -18,6 +18,8 @@ beforeEach(async () => {
   await bindings.DB.prepare('DELETE FROM Tags').run();
   await bindings.DB.prepare('DELETE FROM session').run();
   await bindings.DB.prepare('DELETE FROM GoogleIdentity').run();
+  await bindings.DB.prepare('DELETE FROM IntegrationIdentity').run();
+  await bindings.DB.prepare('DELETE FROM UsedAssertion').run();
 });
 
 describe('Tagtool Worker', () => {
@@ -102,12 +104,16 @@ describe('Tagtool Worker', () => {
     }), configured);
     try {
       const session = await createSession();
+      await call('/tags/pin-1', { method: 'POST', headers: { 'x-session-id': session.sessionId },
+        body: JSON.stringify({ tag: 'anonymous-tag' }) });
       expect((await login(session.sessionId, 'google-subject')).status).toBe(401);
       expect((await login(session.sessionId, await token('alice@gmail.com', 'wrong-client'))).status).toBe(401);
       const authenticated = await login(session.sessionId, await token('alice@gmail.com'));
       expect(authenticated.status).toBe(200);
       const auth = await authenticated.json() as { sessionId: string; userId: string };
       expect(auth.userId).toBe(uuidv5('alice@gmail.com', namespace));
+      const tags = await call('/tags/pin-1', { headers: { 'x-session-id': auth.sessionId } });
+      expect(await tags.json()).toEqual({ objectId: 'pin-1', tags: [{ tag: 'anonymous-tag', count: 1, isOwner: true }] });
       expect((await call('/user', { headers: { 'x-session-id': session.sessionId } })).status).toBe(401);
       const next = await login(auth.sessionId, await token('new-name@gmail.com'));
       expect((await next.json() as { userId: string }).userId).toBe(auth.userId);
@@ -121,5 +127,52 @@ describe('Tagtool Worker', () => {
     } finally {
       mockedFetch.mockRestore();
     }
+  });
+
+  it('trusts signed backend assertions, isolates issuers, prevents replay and moves only anonymous tags', async () => {
+    const keys = await generateKeyPair('RS256', { extractable: true });
+    const publicKey = await exportJWK(keys.publicKey);
+    const config = JSON.stringify(['system-a', 'system-b'].map((issuer) => ({
+      audience: 'tagtool-test', issuer, publicKey,
+    })));
+    const configured = { ...bindings, INTEGRATION_PROVIDERS: config };
+    const token = async (sessionId: string, issuer = 'system-a', id = crypto.randomUUID(), subject = 'same-user') =>
+      new SignJWT({ session_id: sessionId }).setProtectedHeader({ alg: 'RS256' }).setIssuer(issuer)
+        .setAudience('tagtool-test').setSubject(subject).setJti(id).setIssuedAt().setExpirationTime('5m').sign(keys.privateKey);
+    const login = (sessionId: string, assertion: string) => worker.fetch(new Request('https://tagtool.test/login/integration', {
+      method: 'POST', headers: { 'content-type': 'application/json', 'x-session-id': sessionId },
+      body: JSON.stringify({ assertion }),
+    }), configured);
+    const original = await createSession();
+    await call('/tags/pin-1', { method: 'POST', headers: { 'x-session-id': original.sessionId },
+      body: JSON.stringify({ tag: 'anonymous-tag' }) });
+    expect((await login(original.sessionId, await token('wrong-session'))).status).toBe(401);
+    expect((await login(original.sessionId, await token(original.sessionId, 'unknown'))).status).toBe(401);
+    const forged = await generateKeyPair('RS256');
+    const forgedToken = await new SignJWT({ session_id: original.sessionId }).setProtectedHeader({ alg: 'RS256' })
+      .setIssuer('system-a').setAudience('tagtool-test').setSubject('same-user').setJti(crypto.randomUUID())
+      .setIssuedAt().setExpirationTime('5m').sign(forged.privateKey);
+    expect((await login(original.sessionId, forgedToken)).status).toBe(401);
+    const expired = await new SignJWT({ session_id: original.sessionId }).setProtectedHeader({ alg: 'RS256' })
+      .setIssuer('system-a').setAudience('tagtool-test').setSubject('same-user').setJti(crypto.randomUUID())
+      .setIssuedAt(Math.floor(Date.now() / 1000) - 120).setExpirationTime(Math.floor(Date.now() / 1000) - 60)
+      .sign(keys.privateKey);
+    expect((await login(original.sessionId, expired)).status).toBe(401);
+    const assertionId = crypto.randomUUID();
+    const assertion = await token(original.sessionId, 'system-a', assertionId);
+    const first = await login(original.sessionId, assertion);
+    expect(first.status).toBe(200);
+    const firstAuth = await first.json() as { sessionId: string; userId: string };
+    const tags = await call('/tags/pin-1', { headers: { 'x-session-id': firstAuth.sessionId } });
+    expect(await tags.json()).toEqual({ objectId: 'pin-1', tags: [{ tag: 'anonymous-tag', count: 1, isOwner: true }] });
+    const retry = await createSession();
+    expect((await login(retry.sessionId, await token(retry.sessionId, 'system-a', assertionId))).status).toBe(401);
+    const second = await login(firstAuth.sessionId, await token(firstAuth.sessionId, 'system-b'));
+    const secondAuth = await second.json() as { sessionId: string; userId: string };
+    expect(secondAuth.userId).not.toBe(firstAuth.userId);
+    const notOwner = await call('/tags/pin-1', { headers: { 'x-session-id': secondAuth.sessionId } });
+    expect(await notOwner.json()).toEqual({ objectId: 'pin-1', tags: [{ tag: 'anonymous-tag', count: 1, isOwner: false }] });
+    const back = await login(secondAuth.sessionId, await token(secondAuth.sessionId));
+    expect((await back.json() as { userId: string }).userId).toBe(firstAuth.userId);
   });
 });
