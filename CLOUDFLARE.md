@@ -5,8 +5,8 @@
 the Worker against local D1. `npm run check:worker` packages it without deployment.
 All database IDs in the committed `wrangler.jsonc` are placeholders, including
 the local-only binding. Never deploy that file directly. The `dev` environment
-uses the separate `tagtool-dev` D1 database and has no public Worker route or
-preview URL.
+uses the separate `tagtool-dev` D1 database and exposes a public `workers.dev`
+URL for development testing. Version preview URLs remain disabled.
 
 For remote operations, set `TAGTOOL_DEV_D1_DATABASE_ID` in the GitHub Actions
 `dev` environment and `TAGTOOL_PRODUCTION_D1_DATABASE_ID` in the GitHub Actions
