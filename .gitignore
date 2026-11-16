@@ -15,3 +15,6 @@ vitest.config.ts.timestamp-*
 !.env.development
 !.env.test
 .env.*.local
+
+# Local database dumps
+/data/
