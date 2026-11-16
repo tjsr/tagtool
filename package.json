@@ -59,7 +59,7 @@
     "prettier": "^3.9.10",
     "prettier-plugin-sort-members": "^0.1.2",
     "mysql": "^2.18.1",
-    "rimraf": "^6.0.1",
+    "rimraf": "^6.1.4",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.15",
     "typescript": "^5.9.2",
