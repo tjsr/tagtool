@@ -1,6 +1,6 @@
 import { validate as isUuid, v5 as uuidv5 } from 'uuid';
-import { verifyGoogleCredential } from './googleAuth.js';
-import { verifyIntegrationAssertion } from './integrationAuth.js';
+import { verifyGoogleCredential } from './googleAuth.ts';
+import { verifyIntegrationAssertion } from './integrationAuth.ts';
 
 type Session = { userId: string; anonymous?: boolean };
 type TagRow = { tag: string; createdByUserId: string };

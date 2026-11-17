@@ -3,7 +3,7 @@ import { env } from 'cloudflare:workers';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { exportJWK, generateKeyPair, SignJWT } from 'jose';
 import { v5 as uuidv5 } from 'uuid';
-import worker from '../src/worker.js';
+import worker from '../src/worker.ts';
 
 const bindings = env as Env & { TEST_MIGRATIONS: D1Migration[] };
 const call = (path: string, init?: RequestInit) => worker.fetch(new Request(`https://tagtool.test${path}`, init), bindings);
