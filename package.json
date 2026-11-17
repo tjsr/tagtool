@@ -36,7 +36,7 @@
     "url": "https://github.com/tjsr/tagtool/issues"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^5.0.2",
+    "@vitejs/plugin-react": "^6.3.0",
     "jose": "^6.2.17",
     "react": "^19.2.0",
     "react-dom": "^19.3.1",
@@ -64,7 +64,7 @@
     "tsx": "^4.23.15",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.72.1",
-    "vite": "^7.3.7",
+    "vite": "^8.3.8",
     "vitest": "^4.1.12",
     "wrangler": "^4.161.0"
   },
