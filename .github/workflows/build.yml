@@ -8,16 +8,20 @@ permissions:
 
 jobs:
   worker:
-    name: Verify Worker and local D1
+    name: Verify Worker and local D1 (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [24, 26]
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: ${{ matrix.node-version }}
           registry-url: 'https://npm.pkg.github.com'
           scope: '@tjsr'
           cache: npm
@@ -39,7 +43,7 @@ jobs:
         ports:
           - 3306/tcp
         options: >-
-          --health-cmd="mysqladmin ping --host=127.0.0.1 --user=root --password=ci-only-root-password --silent"
+          --health-cmd="MYSQL_PWD=$MYSQL_ROOT_PASSWORD mysqladmin ping --host=127.0.0.1 --user=root --silent"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=12
