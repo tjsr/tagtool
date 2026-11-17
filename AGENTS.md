@@ -1,4 +1,11 @@
-# Agent instructions
+# Agent Instructions
+
+## TypeScript Style
+
+- Format TypeScript and TSX with the repository's Prettier config. Use two spaces and spaces, never tabs.
+- Use explicit relative extensions: `.ts` for TypeScript modules and `.tsx` for TSX modules.
+- Keep imports in the order enforced by `@tjsr/eslint-config`'s `import/order` rule; do not use a separate alphabetic import sorter.
+- Format and apply ESLint fixes on save. Run the repository's lint check after changing imports or formatting rules.
 
 ## npm verification and private dependencies
 
@@ -36,10 +43,3 @@ the shared document cannot be fetched and qualify any install/test recipes below
   Dependabot PR, prefer squash; a single-commit PR may use rebase.
 
 [tjsr-npm-policy]: https://github.com/tjsr/tjsr/blob/251fd1d0606a6ce7e0c994190bbe8f318028fb9e/agent-policies/npm-ci-verification.md
-
-## TypeScript style
-
-- Format TypeScript and TSX with the repository's Prettier config. Use two spaces and spaces, never tabs.
-- Use explicit relative extensions: `.ts` for TypeScript modules and `.tsx` for TSX modules.
-- Keep imports in the order enforced by the repository's ESLint configuration.
-- Format and apply ESLint fixes on save. Run the repository's lint check after changing imports or formatting rules.
