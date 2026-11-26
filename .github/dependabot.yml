@@ -15,16 +15,11 @@ updates:
     assignees:
     - 'tjsr'
     groups:
-      linter:
+      development:
         applies-to: version-updates
+        dependency-type: development
         patterns:
-          - "@tjsr/eslint-config"
-          - "eslint"
-          - "eslint-*"
-          - "@eslint/*"
-          - "@typescript-eslint/*"
-          - "typescript-eslint"
-          - "@stylistic/*"
+          - "*"
   - package-ecosystem: "github-actions"
     rebase-strategy: auto
     directory: "/"
